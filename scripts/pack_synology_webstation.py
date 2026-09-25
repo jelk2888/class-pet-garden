@@ -90,6 +90,16 @@ def main():
         pets_dst.mkdir(parents=True, exist_ok=True)
         print("警告: 无 public/pets，图鉴将缺失", flush=True)
 
+    downloads_src = ROOT / "public" / "downloads"
+    downloads_dst = OUT / "public" / "downloads"
+    if downloads_src.exists():
+        print("复制桌面客户端下载包…", flush=True)
+        if downloads_dst.exists():
+            shutil.rmtree(downloads_dst, ignore_errors=True)
+        shutil.copytree(downloads_src, downloads_dst)
+    else:
+        downloads_dst.mkdir(parents=True, exist_ok=True)
+
     # 3) 根 package.json：群晖上 npm install && npm start
     (OUT / "package.json").write_text(
         """{
@@ -120,6 +130,11 @@ def main():
 ================================
 
 本目录为「单进程」部署包：Node.js 同时提供网页 + API + 宠物图片。
+
+【关于 pets 两个目录】
+- public/pets：运行时图鉴主目录（后端 /pets 静态与管理员上传都写这里）——必须保留。
+- dist/pets：前端构建时从 public 复制的副本，内容应与 public/pets 一致。
+  单进程部署时以后端 public/pets 为准；两边都保留可避免漏图。不要只留 dist/pets。
 
 【推荐方式：Node.js 套件常驻】
 1. 套件中心安装：Node.js v18 / v20（或更新 LTS）、可选 pm2

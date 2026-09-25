@@ -1,0 +1,50 @@
+{
+  "name": "class-pet-desktop",
+  "version": "1.0.0",
+  "description": "东郭工作室·班级宠物园 桌面客户端（Win7 / Win10）",
+  "main": "main.js",
+  "author": "东郭工作室",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack:win7": "electron-builder --win portable --ia32 --config.extraMetadata.productFlavor=win7",
+    "pack:win10": "electron-builder --win portable --x64 --config.extraMetadata.productFlavor=win10",
+    "pack:all": "npm run pack:win7 && npm run pack:win10"
+  },
+  "build": {
+    "appId": "top.dongguo.class-pet-garden",
+    "productName": "班级宠物园",
+    "copyright": "Copyright © 东郭工作室",
+    "directories": {
+      "output": "dist-exe"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "settings.html",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "artifactName": "班级宠物园-${arch}.${ext}",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "portable": {
+      "artifactName": "班级宠物园-${arch}.${ext}"
+    },
+    "electronVersion": "22.3.27"
+  },
+  "devDependencies": {
+    "electron": "22.3.27",
+    "electron-builder": "^24.13.3"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "updatedAt": 1790332583943,
+  "items": [
+    {
+      "id": "win7",
+      "name": "Win7 客户端",
+      "file": "班级宠物园-Win7客户端.exe",
+      "url": "/downloads/班级宠物园-Win7客户端.exe",
+      "size": 58530217,
+      "note": "Windows 7 SP1 及以上（32位/兼容）"
+    },
+    {
+      "id": "win10",
+      "name": "Win10 客户端",
+      "file": "班级宠物园-Win10客户端.exe",
+      "url": "/downloads/班级宠物园-Win10客户端.exe",
+      "size": 62117361,
+      "note": "Windows 10 / 11（64位）"
+    }
+  ]
+}

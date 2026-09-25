@@ -1,0 +1,204 @@
+/* 班级主题：五套流行配色，通过 html[data-theme] 切换，全站 CSS 变量驱动 */
+
+:root,
+[data-theme='peach'] {
+  --theme-name: '桃红暖色';
+  --brand-1: #fb923c;
+  --brand-2: #f43f5e;
+  --brand-3: #ec4899;
+  --brand-gradient: linear-gradient(90deg, #fb923c, #f43f5e, #ec4899);
+  --page-bg: radial-gradient(ellipse at top, #fff7ed 0%, #fdf2f8 42%, #f0f9ff 100%);
+  --page-solid: #fff7ed;
+  --surface: #ffffff;
+  --surface-soft: #fff7ed;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #ea580c;
+  --accent-soft: #ffedd5;
+  --accent-contrast: #ffffff;
+  --nav-border: #ffedd5;
+  --nav-hover-bg: #fff7ed;
+  --nav-hover-text: #ea580c;
+  --nav-active-bg: #f97316;
+  --nav-active-text: #ffffff;
+  --card-border: #ffedd5;
+  --focus-ring: rgba(249, 115, 22, 0.35);
+  --scrollbar: linear-gradient(180deg, #ff9f43, #ff6b9d);
+  --hero-gradient: linear-gradient(135deg, #fb923c, #f43f5e 55%, #ec4899);
+  --shadow-brand: 0 12px 40px rgba(244, 63, 94, 0.18);
+}
+
+/* 海洋蓝 — 清爽课堂 / 投影友好 */
+[data-theme='ocean'] {
+  --theme-name: '海洋蓝';
+  --brand-1: #38bdf8;
+  --brand-2: #0ea5e9;
+  --brand-3: #2563eb;
+  --brand-gradient: linear-gradient(90deg, #38bdf8, #0ea5e9, #2563eb);
+  --page-bg: radial-gradient(ellipse at top, #e0f2fe 0%, #eff6ff 45%, #f8fafc 100%);
+  --page-solid: #e0f2fe;
+  --surface: #ffffff;
+  --surface-soft: #e0f2fe;
+  --text: #0c4a6e;
+  --text-muted: #64748b;
+  --accent: #0284c7;
+  --accent-soft: #e0f2fe;
+  --accent-contrast: #ffffff;
+  --nav-border: #bae6fd;
+  --nav-hover-bg: #e0f2fe;
+  --nav-hover-text: #0369a1;
+  --nav-active-bg: #0284c7;
+  --nav-active-text: #ffffff;
+  --card-border: #bae6fd;
+  --focus-ring: rgba(14, 165, 233, 0.35);
+  --scrollbar: linear-gradient(180deg, #38bdf8, #2563eb);
+  --hero-gradient: linear-gradient(135deg, #0ea5e9, #0284c7 50%, #2563eb);
+  --shadow-brand: 0 12px 40px rgba(14, 165, 233, 0.2);
+}
+
+/* 翠绿 — 自然生长感 */
+[data-theme='forest'] {
+  --theme-name: '翠绿';
+  --brand-1: #4ade80;
+  --brand-2: #22c55e;
+  --brand-3: #059669;
+  --brand-gradient: linear-gradient(90deg, #4ade80, #22c55e, #059669);
+  --page-bg: radial-gradient(ellipse at top, #ecfdf5 0%, #f0fdf4 45%, #f8fafc 100%);
+  --page-solid: #ecfdf5;
+  --surface: #ffffff;
+  --surface-soft: #ecfdf5;
+  --text: #14532d;
+  --text-muted: #64748b;
+  --accent: #16a34a;
+  --accent-soft: #dcfce7;
+  --accent-contrast: #ffffff;
+  --nav-border: #bbf7d0;
+  --nav-hover-bg: #ecfdf5;
+  --nav-hover-text: #15803d;
+  --nav-active-bg: #16a34a;
+  --nav-active-text: #ffffff;
+  --card-border: #bbf7d0;
+  --focus-ring: rgba(34, 197, 94, 0.35);
+  --scrollbar: linear-gradient(180deg, #4ade80, #059669);
+  --hero-gradient: linear-gradient(135deg, #34d399, #22c55e 50%, #059669);
+  --shadow-brand: 0 12px 40px rgba(34, 197, 94, 0.18);
+}
+
+/* 纸黄 — 书卷 / 笔记风 */
+[data-theme='paper'] {
+  --theme-name: '纸黄色';
+  --brand-1: #fbbf24;
+  --brand-2: #d97706;
+  --brand-3: #92400e;
+  --brand-gradient: linear-gradient(90deg, #fcd34d, #f59e0b, #b45309);
+  --page-bg: radial-gradient(ellipse at top, #fffbeb 0%, #fef3c7 40%, #f5f5f4 100%);
+  --page-solid: #fffbeb;
+  --surface: #fffef7;
+  --surface-soft: #fef3c7;
+  --text: #422006;
+  --text-muted: #78716c;
+  --accent: #b45309;
+  --accent-soft: #fef3c7;
+  --accent-contrast: #fffbeb;
+  --nav-border: #fde68a;
+  --nav-hover-bg: #fffbeb;
+  --nav-hover-text: #92400e;
+  --nav-active-bg: #d97706;
+  --nav-active-text: #ffffff;
+  --card-border: #fde68a;
+  --focus-ring: rgba(217, 119, 6, 0.35);
+  --scrollbar: linear-gradient(180deg, #fbbf24, #b45309);
+  --hero-gradient: linear-gradient(135deg, #fbbf24, #d97706 55%, #92400e);
+  --shadow-brand: 0 12px 40px rgba(180, 83, 9, 0.16);
+}
+
+/* 暮光紫 — 现代活力 */
+[data-theme='violet'] {
+  --theme-name: '暮光紫';
+  --brand-1: #c084fc;
+  --brand-2: #8b5cf6;
+  --brand-3: #6366f1;
+  --brand-gradient: linear-gradient(90deg, #c084fc, #8b5cf6, #6366f1);
+  --page-bg: radial-gradient(ellipse at top, #f5f3ff 0%, #ede9fe 42%, #eef2ff 100%);
+  --page-solid: #f5f3ff;
+  --surface: #ffffff;
+  --surface-soft: #f5f3ff;
+  --text: #312e81;
+  --text-muted: #64748b;
+  --accent: #7c3aed;
+  --accent-soft: #ede9fe;
+  --accent-contrast: #ffffff;
+  --nav-border: #ddd6fe;
+  --nav-hover-bg: #f5f3ff;
+  --nav-hover-text: #6d28d9;
+  --nav-active-bg: #7c3aed;
+  --nav-active-text: #ffffff;
+  --card-border: #ddd6fe;
+  --focus-ring: rgba(124, 58, 237, 0.35);
+  --scrollbar: linear-gradient(180deg, #c084fc, #6366f1);
+  --hero-gradient: linear-gradient(135deg, #a78bfa, #8b5cf6 50%, #6366f1);
+  --shadow-brand: 0 12px 40px rgba(124, 58, 237, 0.2);
+}
+
+/* 主题化通用组件类 —— 各页面尽量用这些，随主题切换 */
+.theme-page-bg {
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.theme-header {
+  background: var(--brand-gradient);
+}
+
+.theme-nav-bar {
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  border-bottom: 1px solid var(--nav-border);
+}
+
+.theme-card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+}
+
+.theme-btn-primary {
+  background: var(--brand-gradient);
+  color: var(--accent-contrast);
+}
+
+.theme-btn-solid {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.theme-link {
+  color: var(--accent);
+}
+
+.theme-soft {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.theme-hero {
+  background: var(--hero-gradient);
+  box-shadow: var(--shadow-brand);
+}
+
+.theme-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.theme-nav-tab {
+  color: var(--text-muted);
+}
+.theme-nav-tab:hover {
+  background: var(--nav-hover-bg);
+  color: var(--nav-hover-text);
+}
+.theme-nav-tab-active,
+.theme-nav-tab.theme-nav-tab-active {
+  background: var(--nav-active-bg) !important;
+  color: var(--nav-active-text) !important;
+  font-weight: 600;
+}

@@ -308,9 +308,9 @@ router.post('/', authMiddleware, (req, res) => {
   })
 })
 
-// 更新班级（任教教师可改名；删除仅班主任）
+// 更新班级（任教教师可改名 / 改主题；删除仅班主任）
 router.put('/:id', authMiddleware, (req, res) => {
-  const { name } = req.body
+  const { name, ui_theme, uiTheme } = req.body
   const cls = verifyClassOwnership(req.params.id, req.userId)
 
   if (!cls) {
@@ -318,8 +318,39 @@ router.put('/:id', authMiddleware, (req, res) => {
   }
 
   const now = Date.now()
-  db.prepare('UPDATE classes SET name = ?, updated_at = ? WHERE id = ?').run(name, now, req.params.id)
+  const theme = ui_theme || uiTheme
+  const allowed = ['peach', 'ocean', 'forest', 'paper', 'violet']
+  if (name != null && String(name).trim()) {
+    db.prepare('UPDATE classes SET name = ?, updated_at = ? WHERE id = ?')
+      .run(String(name).trim(), now, req.params.id)
+  }
+  if (theme && allowed.includes(theme)) {
+    try {
+      db.prepare('UPDATE classes SET ui_theme = ?, updated_at = ? WHERE id = ?')
+        .run(theme, now, req.params.id)
+    } catch (e) {
+      // 旧库无列时忽略
+    }
+  }
   res.json({ success: true })
+})
+
+// 仅更新主题
+router.put('/:id/theme', authMiddleware, (req, res) => {
+  const theme = req.body?.ui_theme || req.body?.theme
+  const allowed = ['peach', 'ocean', 'forest', 'paper', 'violet']
+  if (!theme || !allowed.includes(theme)) {
+    return res.status(400).json({ error: '无效主题' })
+  }
+  const cls = verifyClassOwnership(req.params.id, req.userId)
+  if (!cls) return res.status(403).json({ error: '无权修改' })
+  try {
+    db.prepare('UPDATE classes SET ui_theme = ?, updated_at = ? WHERE id = ?')
+      .run(theme, Date.now(), req.params.id)
+  } catch (e) {
+    return res.status(500).json({ error: '数据库未就绪，请重启服务' })
+  }
+  res.json({ success: true, ui_theme: theme })
 })
 
 // 删除班级（仅班主任；游客禁止）

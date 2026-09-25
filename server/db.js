@@ -391,6 +391,13 @@ export function initDb() {
     // ignore if duplicates somehow exist
   }
 
+  // 班级界面主题
+  try {
+    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'peach'`)
+  } catch (e) {
+    // already exists
+  }
+
   // 为已有班级补邀请码；把班主任写入 class_teachers（role=owner）
   function genInviteCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'

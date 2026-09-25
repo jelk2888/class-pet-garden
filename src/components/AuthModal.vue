@@ -155,7 +155,7 @@ function guestLogin() {
           
           <button 
             type="submit"
-            class="w-full bg-gradient-to-r from-orange-400 to-pink-500 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
+            class="w-full theme-btn-primary py-3 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
             :disabled="loading"
           >
             {{ submitText }}

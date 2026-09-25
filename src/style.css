@@ -4,11 +4,10 @@
 
 body {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  background-color: #f0f7fc;
-  color: #0f172a;
+  background-color: var(--page-solid, #f0f7fc);
+  color: var(--text, #0f172a);
 }
 
-/* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -20,69 +19,51 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #FF9F43, #FF6B9D);
+  background: var(--scrollbar, linear-gradient(180deg, #FF9F43, #FF6B9D));
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #FF8C2B, #FF5A8D);
-}
-
-/* 卡片悬浮效果 */
 @layer components {
   .card-hover {
     @apply transition-all duration-300 ease-out;
   }
-  
+
   .card-hover:hover {
     @apply -translate-y-1;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
 
-  /* 渐变文字 */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400;
+    @apply bg-clip-text text-transparent;
+    background-image: var(--brand-gradient);
   }
 
-  /* 玻璃态效果 */
   .glass {
     @apply bg-white/80 backdrop-blur-md;
   }
 
-  /* 发光边框 */
   .glow-border {
     position: relative;
   }
-  
+
   .glow-border::before {
     content: '';
     position: absolute;
     inset: -2px;
     border-radius: inherit;
     padding: 2px;
-    background: linear-gradient(135deg, #FF9F43, #FF6B9D, #A855F7);
+    background: var(--brand-gradient);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   .glow-border:hover::before {
     opacity: 1;
   }
 
-  /* 闪烁星星效果 */
-  .sparkle-star {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: radial-gradient(circle, #FFD700 0%, transparent 70%);
-    border-radius: 50%;
-    animation: sparkle 1.5s ease-in-out infinite;
-  }
-
-  /* 等级徽章金属质感 */
   .level-badge {
     @apply font-bold px-3 py-1 rounded-full shadow-lg;
     background: linear-gradient(135deg, var(--level-color-light), var(--level-color));
@@ -91,12 +72,11 @@ body {
     border: 2px solid rgba(255,255,255,0.3);
   }
 
-  /* 进度条发光效果 */
   .progress-glow {
     position: relative;
     overflow: hidden;
   }
-  
+
   .progress-glow::after {
     content: '';
     position: absolute;
@@ -109,7 +89,6 @@ body {
   }
 }
 
-/* 动画关键帧 */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
@@ -137,12 +116,14 @@ body {
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
-/* 未领养动画 */
+@keyframes shimmer {
+  100% { left: 100%; }
+}
+
 .pet-unknown {
   animation: wiggle 2s ease-in-out infinite;
 }
 
-/* 加载动画 */
 .loading-pet {
   animation: bounce 1s ease-in-out infinite;
 }

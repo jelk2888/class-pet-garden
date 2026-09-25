@@ -42,6 +42,43 @@ app.use(express.json({ limit: '25mb' }))
 // 宠物图片静态目录（管理员上传写入 public/pets）
 app.use('/pets', express.static(PETS_ROOT, { maxAge: '1h', fallthrough: true }))
 
+// 桌面客户端 EXE 下载（Win7 / Win10）
+const DOWNLOADS_DIR = path.resolve(__dirname, '../public/downloads')
+fs.mkdirSync(DOWNLOADS_DIR, { recursive: true })
+app.use('/downloads', express.static(DOWNLOADS_DIR, {
+  maxAge: '10m',
+  setHeaders(res, filePath) {
+    if (String(filePath).toLowerCase().endsWith('.exe')) {
+      res.setHeader('Content-Type', 'application/octet-stream')
+      res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(filePath))}`)
+    }
+  },
+}))
+app.get('/api/downloads', (req, res) => {
+  const manifestPath = path.join(DOWNLOADS_DIR, 'manifest.json')
+  if (fs.existsSync(manifestPath)) {
+    try {
+      return res.json(JSON.parse(fs.readFileSync(manifestPath, 'utf8')))
+    } catch (e) {
+      console.warn('downloads manifest parse failed', e?.message)
+    }
+  }
+  const items = []
+  for (const name of fs.readdirSync(DOWNLOADS_DIR)) {
+    if (!name.toLowerCase().endsWith('.exe')) continue
+    const full = path.join(DOWNLOADS_DIR, name)
+    const st = fs.statSync(full)
+    items.push({
+      id: name.includes('Win7') ? 'win7' : name.includes('Win10') ? 'win10' : name,
+      name,
+      file: name,
+      url: '/downloads/' + encodeURIComponent(name),
+      size: st.size,
+    })
+  }
+  res.json({ updatedAt: Date.now(), items })
+})
+
 // 初始化数据库
 initDb()
 
@@ -117,7 +154,7 @@ if (fs.existsSync(STATIC_DIR)) {
   app.use(express.static(STATIC_DIR, { maxAge: '1h', index: false }))
   // Vue Router history 模式：非 API / pets 回落到 index.html
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/pets')) return next()
+    if (req.path.startsWith('/api') || req.path.startsWith('/pets') || req.path.startsWith('/downloads')) return next()
     const indexHtml = path.join(STATIC_DIR, 'index.html')
     if (fs.existsSync(indexHtml)) return res.sendFile(indexHtml)
     next()

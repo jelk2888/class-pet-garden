@@ -58,6 +58,14 @@ export function useClasses() {
     await loadClasses()
   }
 
+  async function updateClassTheme(id: string, ui_theme: string) {
+    await api.put(`/classes/${id}/theme`, { ui_theme })
+    if (currentClass.value?.id === id) {
+      currentClass.value = { ...currentClass.value, ui_theme: ui_theme as any }
+    }
+    await loadClasses()
+  }
+
   async function deleteClass(id: string) {
     await api.delete(`/classes/${id}`)
     if (currentClass.value?.id === id) {
@@ -90,6 +98,7 @@ export function useClasses() {
     selectClass,
     createClass,
     updateClass,
+    updateClassTheme,
     deleteClass,
     syncCurrentClass,
     init

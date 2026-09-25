@@ -56,3 +56,9 @@ agent-transcripts/
 
 dist/pets/
 
+# Desktop client build artifacts / large EXEs（本地与群晖包保留）
+desktop/node_modules/
+desktop/dist-exe/
+public/downloads/*.exe
+dist/downloads/
+

@@ -16,6 +16,7 @@ const { showLoginModal, closeLoginModal, openLoginModal } = useLoginModal()
 const toast = useToast()
 
 const loading = ref(true)
+const desktopDownloads = ref<{ id: string; name: string; url: string; size?: number; note?: string }[]>([])
 const stats = ref({
   studentCount: 0,
   withPet: 0,
@@ -119,11 +120,31 @@ function handleLogin() {
   window.location.reload()
 }
 
+function formatSize(n?: number) {
+  if (!n || n <= 0) return ''
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
+  return `${(n / 1024 / 1024).toFixed(1)} MB`
+}
+
+async function loadDesktopDownloads() {
+  try {
+    const res = await api.get('/downloads')
+    const items = res.data?.items || []
+    desktopDownloads.value = items.filter((x: any) => x.url)
+  } catch {
+    // 兼容仅有静态文件、无 API 的情况
+    desktopDownloads.value = [
+      { id: 'win7', name: 'Win7 客户端', url: '/downloads/班级宠物园-Win7客户端.exe', note: 'Windows 7' },
+      { id: 'win10', name: 'Win10 客户端', url: '/downloads/班级宠物园-Win10客户端.exe', note: 'Windows 10/11' },
+    ]
+  }
+}
+
 watch(currentClass, () => loadOverview())
 
 onMounted(async () => {
   await init()
-  await loadOverview()
+  await Promise.all([loadOverview(), loadDesktopDownloads()])
 })
 </script>
 
@@ -131,7 +152,7 @@ onMounted(async () => {
   <PageLayout>
     <div class="max-w-6xl mx-auto space-y-6">
       <!-- Hero -->
-      <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-600 text-white p-6 md:p-8 shadow-xl shadow-sky-200/50">
+      <section class="relative overflow-hidden rounded-3xl text-white p-6 md:p-8 theme-hero">
         <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
         <div class="absolute right-16 bottom-0 w-28 h-28 rounded-full bg-amber-300/20 blur-xl"></div>
         <div class="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -141,13 +162,20 @@ onMounted(async () => {
               {{ currentClass?.name || '欢迎回来' }}
             </h1>
             <p class="mt-2 text-white/85 text-sm md:text-base max-w-xl">
-              以学养宠，以宠励学 —— 把每一次课堂鼓励，变成看得见的成长。
+              以学养宠，以宠励学 —— 把每一次课堂鼓励，变成看得见的成长。科任老师邀请码入班后也可加扣分。
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
             <router-link to="/wizard" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-medium transition">🧭 开班向导</router-link>
-            <router-link to="/" class="px-4 py-2 rounded-xl bg-white text-sky-700 font-semibold text-sm shadow hover:shadow-md transition">🐾 进入宠物教室</router-link>
+            <router-link to="/" class="px-4 py-2 rounded-xl bg-white font-semibold text-sm shadow hover:shadow-md transition theme-link">🐾 进入宠物教室</router-link>
             <router-link to="/ranking" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-medium transition">🏆 排行榜</router-link>
+            <a
+              v-for="d in desktopDownloads"
+              :key="d.id"
+              :href="d.url"
+              class="px-4 py-2 rounded-xl bg-amber-300 text-amber-950 font-semibold text-sm shadow hover:bg-amber-200 transition"
+              :title="d.note || d.name"
+            >💻 {{ d.id === 'win7' ? '下载 Win7 客户端' : d.id === 'win10' ? '下载 Win10 客户端' : d.name }}</a>
           </div>
         </div>
       </section>
@@ -165,6 +193,19 @@ onMounted(async () => {
           <p class="text-sm text-gray-500 mt-1 mb-3">{{ tip.desc }}</p>
           <span class="text-sm text-sky-600 font-medium">{{ tip.label }} →</span>
         </button>
+      </section>
+
+      <section v-if="!classes.length && desktopDownloads.length" class="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm">
+        <h2 class="font-bold text-gray-800 mb-2">💻 一键到桌面</h2>
+        <p class="text-sm text-gray-500 mb-3">下载客户端后可在桌面完成班级登录与管理员管理。</p>
+        <div class="flex flex-wrap gap-2">
+          <a
+            v-for="d in desktopDownloads"
+            :key="'empty-' + d.id"
+            :href="d.url"
+            class="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600"
+          >{{ d.id === 'win7' ? 'Win7 客户端' : d.id === 'win10' ? 'Win10 客户端' : d.name }} ↓</a>
+        </div>
       </section>
 
       <!-- Stats -->
@@ -200,6 +241,35 @@ onMounted(async () => {
             <router-link to="/shop" class="quick-tile">🛒<span>积分商城</span></router-link>
             <router-link to="/honors" class="quick-tile">🎖️<span>荣誉墙</span></router-link>
           </div>
+
+          <!-- 一键到桌面：客户端下载 -->
+          <div class="mt-5 rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <h3 class="font-bold text-gray-800 text-sm">💻 一键到桌面</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                  下载 Win7 / Win10 客户端，班级登录与管理员系统管理均可在桌面完成。首次打开请填写服务器地址。
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <a
+                v-for="d in desktopDownloads"
+                :key="'card-' + d.id"
+                :href="d.url"
+                class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white border border-amber-100 hover:border-orange-300 hover:shadow-sm transition text-sm"
+              >
+                <span class="font-medium text-gray-800">
+                  {{ d.id === 'win7' ? 'Windows 7 客户端' : d.id === 'win10' ? 'Windows 10/11 客户端' : d.name }}
+                </span>
+                <span class="text-xs text-orange-600 font-semibold">
+                  {{ formatSize(d.size) || '下载 EXE' }} ↓
+                </span>
+              </a>
+              <p v-if="!desktopDownloads.length" class="text-xs text-gray-400">客户端打包后将出现在此处</p>
+            </div>
+          </div>
+
           <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-gray-500">
             <div class="rounded-xl bg-amber-50 py-2"><div class="text-lg font-bold text-amber-600">{{ stats.injured }}</div>受伤</div>
             <div class="rounded-xl bg-slate-50 py-2"><div class="text-lg font-bold text-slate-600">{{ stats.dead }}</div>阵亡</div>

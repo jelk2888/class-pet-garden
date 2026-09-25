@@ -25,6 +25,10 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/downloads': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
     // 静态资源缓存配置
     headers: {

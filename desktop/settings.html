@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设置服务器 - 班级宠物园</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #fb923c, #f43f5e, #ec4899);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+      color: #1f2937;
+    }
+    .card {
+      width: 100%; max-width: 480px; background: #fff; border-radius: 24px;
+      padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p { margin: 0 0 20px; color: #6b7280; font-size: 14px; line-height: 1.6; }
+    label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 12px 14px; border: 1px solid #fdba74; border-radius: 12px;
+      font-size: 15px; outline: none;
+    }
+    input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,.2); }
+    .actions { display: flex; gap: 10px; margin-top: 20px; }
+    button {
+      flex: 1; border: 0; border-radius: 12px; padding: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+    }
+    .primary { background: linear-gradient(90deg,#fb923c,#f43f5e); color: #fff; }
+    .ghost { background: #fff7ed; color: #c2410c; }
+    .tip { margin-top: 16px; font-size: 12px; color: #9ca3af; }
+    .err { color: #dc2626; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🖥️ 连接班级宠物园</h1>
+    <p>请填写服务器地址（本机 / 群晖 / 局域网）。保存后即可班级登录、课堂评价；管理员账号可进「系统管理」。</p>
+    <label for="url">服务器地址</label>
+    <input id="url" type="text" placeholder="例如 http://192.168.1.8:3000 或 http://127.0.0.1:3000" />
+    <div class="err" id="err"></div>
+    <div class="actions">
+      <button class="ghost" id="testBtn" type="button">测试连接</button>
+      <button class="primary" id="saveBtn" type="button">保存并进入</button>
+    </div>
+    <div class="tip">Win7 / Win10 通用客户端 · 东郭工作室</div>
+  </div>
+  <script>
+    const urlEl = document.getElementById('url')
+    const errEl = document.getElementById('err')
+
+    function normalize(u) {
+      u = (u || '').trim()
+      if (!u) return ''
+      if (!/^https?:\/\//i.test(u)) u = 'http://' + u
+      return u.replace(/\/+$/, '')
+    }
+
+    async function init() {
+      try {
+        const cfg = await window.petDesktop.getConfig()
+        urlEl.value = cfg.serverUrl || 'http://127.0.0.1:3000'
+      } catch (e) {
+        urlEl.value = 'http://127.0.0.1:3000'
+      }
+    }
+
+    document.getElementById('testBtn').onclick = async () => {
+      errEl.textContent = ''
+      const base = normalize(urlEl.value)
+      if (!base) { errEl.textContent = '请填写地址'; return }
+      try {
+        const ctrl = new AbortController()
+        const t = setTimeout(() => ctrl.abort(), 5000)
+        const res = await fetch(base + '/api/health', { signal: ctrl.signal })
+        clearTimeout(t)
+        if (!res.ok) throw new Error('HTTP ' + res.status)
+        errEl.style.color = '#059669'
+        errEl.textContent = '连接成功 ✓'
+      } catch (e) {
+        errEl.style.color = '#dc2626'
+        errEl.textContent = '连接失败，请检查地址与服务是否启动'
+      }
+    }
+
+    document.getElementById('saveBtn').onclick = async () => {
+      errEl.style.color = '#dc2626'
+      errEl.textContent = ''
+      const base = normalize(urlEl.value)
+      if (!base) { errEl.textContent = '请填写地址'; return }
+      await window.petDesktop.saveConfig({ serverUrl: base })
+      await window.petDesktop.goHome()
+    }
+
+    init()
+  </script>
+</body>
+</html>

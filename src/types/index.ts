@@ -6,6 +6,7 @@ export interface Class {
   role?: 'owner' | 'teacher'
   is_owner?: boolean
   teacher_count?: number
+  ui_theme?: 'peach' | 'ocean' | 'forest' | 'paper' | 'violet'
 }
 
 export interface Student {
