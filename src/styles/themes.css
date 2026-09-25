@@ -202,3 +202,102 @@
   color: var(--nav-active-text) !important;
   font-weight: 600;
 }
+
+/*
+ * 全站主色映射：把页面里大量写死的 orange / rose / pink / sky
+ * 映射到当前主题变量，避免只换顶栏。
+ */
+html[data-theme] .bg-orange-50,
+html[data-theme] .hover\:bg-orange-50:hover,
+html[data-theme] .bg-rose-50,
+html[data-theme] .bg-pink-50,
+html[data-theme] .bg-amber-50,
+html[data-theme] .bg-sky-50,
+html[data-theme] .hover\:bg-sky-50:hover {
+  background-color: var(--accent-soft) !important;
+}
+
+html[data-theme] .bg-orange-100,
+html[data-theme] .bg-rose-100,
+html[data-theme] .bg-pink-100,
+html[data-theme] .bg-amber-100,
+html[data-theme] .bg-sky-100 {
+  background-color: var(--accent-soft) !important;
+}
+
+html[data-theme] .bg-orange-400,
+html[data-theme] .bg-orange-500,
+html[data-theme] .hover\:bg-orange-500:hover,
+html[data-theme] .hover\:bg-orange-600:hover,
+html[data-theme] .bg-rose-400,
+html[data-theme] .bg-rose-500,
+html[data-theme] .bg-pink-500,
+html[data-theme] .bg-amber-400,
+html[data-theme] .bg-amber-500,
+html[data-theme] .bg-sky-500,
+html[data-theme] .bg-sky-600,
+html[data-theme] .bg-cyan-500 {
+  background-color: var(--accent) !important;
+  background-image: none !important;
+}
+
+html[data-theme] .text-orange-500,
+html[data-theme] .text-orange-600,
+html[data-theme] .hover\:text-orange-600:hover,
+html[data-theme] .text-rose-500,
+html[data-theme] .text-pink-500,
+html[data-theme] .text-amber-600,
+html[data-theme] .text-sky-600,
+html[data-theme] .text-sky-700,
+html[data-theme] .hover\:text-sky-700:hover {
+  color: var(--accent) !important;
+}
+
+html[data-theme] .border-orange-100,
+html[data-theme] .border-orange-200,
+html[data-theme] .border-rose-100,
+html[data-theme] .border-pink-100,
+html[data-theme] .border-amber-100,
+html[data-theme] .border-sky-100,
+html[data-theme] .border-sky-200 {
+  border-color: var(--card-border) !important;
+}
+
+html[data-theme] .border-orange-400,
+html[data-theme] .focus\:border-orange-400:focus,
+html[data-theme] .border-sky-400 {
+  border-color: var(--accent) !important;
+}
+
+html[data-theme] .ring-orange-200,
+html[data-theme] .ring-orange-400,
+html[data-theme] .focus\:ring-orange-400:focus {
+  --tw-ring-color: var(--focus-ring) !important;
+}
+
+/* 渐变按钮 / 头像 / 顶栏类：统一成主题渐变 */
+html[data-theme] .bg-gradient-to-r.from-orange-400,
+html[data-theme] .bg-gradient-to-r.from-orange-400.to-pink-500,
+html[data-theme] .bg-gradient-to-r.from-orange-400.via-rose-400,
+html[data-theme] .bg-gradient-to-br.from-orange-400,
+html[data-theme] .bg-gradient-to-br.from-sky-500,
+html[data-theme] .from-orange-400,
+html[data-theme] .via-rose-400,
+html[data-theme] .to-pink-500 {
+  background-image: var(--brand-gradient) !important;
+}
+
+html[data-theme] .shadow-sky-200\/50,
+html[data-theme] .shadow-orange-200\/50 {
+  box-shadow: var(--shadow-brand) !important;
+}
+
+/* 卡片边框统一 */
+html[data-theme] .stat-card,
+html[data-theme] .quick-tile {
+  border-color: var(--card-border);
+}
+html[data-theme] .quick-tile:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}

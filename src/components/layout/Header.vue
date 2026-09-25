@@ -108,8 +108,9 @@ async function handleThemeSelect(id: ThemeId) {
   try {
     await updateClassTheme(currentClass.value.id, id)
     toast.success('班级样式已更新')
-  } catch {
-    toast.error('样式保存失败（本地已预览）')
+  } catch (e: any) {
+    const msg = e?.response?.data?.error || e?.message || ''
+    toast.error(msg ? `样式保存失败：${msg}` : '样式保存失败（本地已预览）。请重启后端后再试')
   }
 }
 

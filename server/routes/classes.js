@@ -308,8 +308,38 @@ router.post('/', authMiddleware, (req, res) => {
   })
 })
 
+const ALLOWED_THEMES = ['peach', 'ocean', 'forest', 'paper', 'violet']
+
+function ensureUiThemeColumn() {
+  try {
+    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'peach'`)
+  } catch (e) {
+    // already exists
+  }
+}
+
+// 仅更新主题（必须写在 PUT /:id 之前，避免被吞）
+router.put('/:id/theme', authMiddleware, (req, res) => {
+  ensureUiThemeColumn()
+  const theme = req.body?.ui_theme || req.body?.theme
+  if (!theme || !ALLOWED_THEMES.includes(theme)) {
+    return res.status(400).json({ error: '无效主题' })
+  }
+  const cls = verifyClassOwnership(req.params.id, req.userId)
+  if (!cls) return res.status(403).json({ error: '无权修改该班级样式（请确认已登录且已入班）' })
+  try {
+    db.prepare('UPDATE classes SET ui_theme = ?, updated_at = ? WHERE id = ?')
+      .run(theme, Date.now(), req.params.id)
+  } catch (e) {
+    console.error('update theme failed', e)
+    return res.status(500).json({ error: '数据库写入失败，请重启后端服务' })
+  }
+  res.json({ success: true, ui_theme: theme })
+})
+
 // 更新班级（任教教师可改名 / 改主题；删除仅班主任）
 router.put('/:id', authMiddleware, (req, res) => {
+  ensureUiThemeColumn()
   const { name, ui_theme, uiTheme } = req.body
   const cls = verifyClassOwnership(req.params.id, req.userId)
 
@@ -319,38 +349,20 @@ router.put('/:id', authMiddleware, (req, res) => {
 
   const now = Date.now()
   const theme = ui_theme || uiTheme
-  const allowed = ['peach', 'ocean', 'forest', 'paper', 'violet']
   if (name != null && String(name).trim()) {
     db.prepare('UPDATE classes SET name = ?, updated_at = ? WHERE id = ?')
       .run(String(name).trim(), now, req.params.id)
   }
-  if (theme && allowed.includes(theme)) {
+  if (theme && ALLOWED_THEMES.includes(theme)) {
     try {
       db.prepare('UPDATE classes SET ui_theme = ?, updated_at = ? WHERE id = ?')
         .run(theme, now, req.params.id)
     } catch (e) {
-      // 旧库无列时忽略
+      console.error('update class theme failed', e)
+      return res.status(500).json({ error: '主题字段写入失败，请重启后端' })
     }
   }
   res.json({ success: true })
-})
-
-// 仅更新主题
-router.put('/:id/theme', authMiddleware, (req, res) => {
-  const theme = req.body?.ui_theme || req.body?.theme
-  const allowed = ['peach', 'ocean', 'forest', 'paper', 'violet']
-  if (!theme || !allowed.includes(theme)) {
-    return res.status(400).json({ error: '无效主题' })
-  }
-  const cls = verifyClassOwnership(req.params.id, req.userId)
-  if (!cls) return res.status(403).json({ error: '无权修改' })
-  try {
-    db.prepare('UPDATE classes SET ui_theme = ?, updated_at = ? WHERE id = ?')
-      .run(theme, Date.now(), req.params.id)
-  } catch (e) {
-    return res.status(500).json({ error: '数据库未就绪，请重启服务' })
-  }
-  res.json({ success: true, ui_theme: theme })
 })
 
 // 删除班级（仅班主任；游客禁止）

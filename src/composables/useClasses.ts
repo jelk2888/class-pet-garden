@@ -59,7 +59,12 @@ export function useClasses() {
   }
 
   async function updateClassTheme(id: string, ui_theme: string) {
-    await api.put(`/classes/${id}/theme`, { ui_theme })
+    try {
+      await api.put(`/classes/${id}/theme`, { ui_theme })
+    } catch {
+      // 兼容旧后端：走通用更新接口
+      await api.put(`/classes/${id}`, { ui_theme })
+    }
     if (currentClass.value?.id === id) {
       currentClass.value = { ...currentClass.value, ui_theme: ui_theme as any }
     }

@@ -1,4 +1,4 @@
-import db from '../db.js'
+import { db } from '../db.js'
 
 /** 是否班级创建者（班主任） */
 export function isClassOwner(classId, userId) {
@@ -52,12 +52,18 @@ export function verifyStudentOwnership(studentId, userId) {
 }
 
 export function verifyStudentsOwnership(studentIds, userId) {
-  if (!studentIds || studentIds.length === 0) return []
+  if (!studentIds || studentIds.length === 0) {
+    return { valid: false, students: [] }
+  }
   const placeholders = studentIds.map(() => '?').join(',')
   const students = db.prepare(
     `SELECT * FROM students WHERE id IN (${placeholders})`
   ).all(...studentIds)
-  return students.filter((s) => isClassMember(s.class_id, userId))
+  const owned = students.filter((s) => isClassMember(s.class_id, userId))
+  return {
+    valid: owned.length === studentIds.length,
+    students: owned,
+  }
 }
 
 export function verifyRecordOwnership(recordId, userId) {
@@ -66,6 +72,24 @@ export function verifyRecordOwnership(recordId, userId) {
   if (!record) return null
   if (!verifyClassOwnership(record.class_id, userId)) return null
   return record
+}
+
+/** 标签归属当前用户 */
+export function verifyTagOwnership(tagId, userId) {
+  if (!tagId || !userId) return null
+  if (userId === 'admin') {
+    return db.prepare('SELECT * FROM student_tags WHERE id = ?').get(tagId) || null
+  }
+  return db.prepare('SELECT * FROM student_tags WHERE id = ? AND user_id = ?').get(tagId, userId) || null
+}
+
+/** 评价规则归属 */
+export function verifyRuleOwnership(ruleId, userId) {
+  if (!ruleId || !userId) return null
+  if (userId === 'admin') {
+    return db.prepare('SELECT * FROM evaluation_rules WHERE id = ?').get(ruleId) || null
+  }
+  return db.prepare('SELECT * FROM evaluation_rules WHERE id = ? AND user_id = ?').get(ruleId, userId) || null
 }
 
 export function requireClassOwnership(req, res, next) {
