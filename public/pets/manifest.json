@@ -1,0 +1,406 @@
+{
+  "custom": [
+    {
+      "id": "m001",
+      "name": "貔貅",
+      "category": "mythical"
+    },
+    {
+      "id": "m002",
+      "name": "囚牛",
+      "category": "mythical"
+    },
+    {
+      "id": "m003",
+      "name": "睚眦",
+      "category": "mythical"
+    },
+    {
+      "id": "m004",
+      "name": "蒲牢",
+      "category": "mythical"
+    },
+    {
+      "id": "m005",
+      "name": "狻猊",
+      "category": "mythical"
+    },
+    {
+      "id": "m006",
+      "name": "螭吻",
+      "category": "mythical"
+    },
+    {
+      "id": "m007",
+      "name": "赑屃",
+      "category": "mythical"
+    },
+    {
+      "id": "m008",
+      "name": "狴犴",
+      "category": "mythical"
+    },
+    {
+      "id": "m009",
+      "name": "负屃",
+      "category": "mythical"
+    },
+    {
+      "id": "m010",
+      "name": "椒图",
+      "category": "mythical"
+    },
+    {
+      "id": "m011",
+      "name": "食梦貘",
+      "category": "mythical"
+    },
+    {
+      "id": "m012",
+      "name": "甪端",
+      "category": "mythical"
+    },
+    {
+      "id": "m013",
+      "name": "英招",
+      "category": "mythical"
+    },
+    {
+      "id": "m014",
+      "name": "帝江",
+      "category": "mythical"
+    },
+    {
+      "id": "m015",
+      "name": "讙",
+      "category": "mythical"
+    },
+    {
+      "id": "m016",
+      "name": "犼",
+      "category": "mythical"
+    },
+    {
+      "id": "m017",
+      "name": "腾蛇",
+      "category": "mythical"
+    },
+    {
+      "id": "m018",
+      "name": "鲲",
+      "category": "mythical"
+    },
+    {
+      "id": "m019",
+      "name": "应龙",
+      "category": "mythical"
+    },
+    {
+      "id": "m020",
+      "name": "毕方",
+      "category": "mythical"
+    },
+    {
+      "id": "m021",
+      "name": "重明鸟",
+      "category": "mythical"
+    },
+    {
+      "id": "m022",
+      "name": "青鸾",
+      "category": "mythical"
+    },
+    {
+      "id": "m023",
+      "name": "金乌",
+      "category": "mythical"
+    },
+    {
+      "id": "m024",
+      "name": "蜃",
+      "category": "mythical"
+    },
+    {
+      "id": "m025",
+      "name": "旋龟",
+      "category": "mythical"
+    },
+    {
+      "id": "m026",
+      "name": "龙马",
+      "category": "mythical"
+    },
+    {
+      "id": "m027",
+      "name": "三足金蟾",
+      "category": "mythical"
+    },
+    {
+      "id": "m028",
+      "name": "锦鲤仙子",
+      "category": "mythical"
+    },
+    {
+      "id": "m029",
+      "name": "石狮子",
+      "category": "mythical"
+    },
+    {
+      "id": "m030",
+      "name": "年兽",
+      "category": "mythical"
+    },
+    {
+      "id": "m031",
+      "name": "白猿",
+      "category": "mythical"
+    },
+    {
+      "id": "m032",
+      "name": "山魈",
+      "category": "mythical"
+    },
+    {
+      "id": "m033",
+      "name": "玄蜂",
+      "category": "mythical"
+    },
+    {
+      "id": "m034",
+      "name": "玄鸟",
+      "category": "mythical"
+    },
+    {
+      "id": "m035",
+      "name": "山膏",
+      "category": "mythical"
+    },
+    {
+      "id": "m036",
+      "name": "蛟龙",
+      "category": "mythical"
+    },
+    {
+      "id": "m037",
+      "name": "朱雀",
+      "category": "mythical"
+    },
+    {
+      "id": "m038",
+      "name": "玄武",
+      "category": "mythical"
+    },
+    {
+      "id": "m039",
+      "name": "狌狌",
+      "category": "mythical"
+    },
+    {
+      "id": "m040",
+      "name": "鲛人",
+      "category": "mythical"
+    },
+    {
+      "id": "m041",
+      "name": "猫头鹰",
+      "category": "normal"
+    },
+    {
+      "id": "m042",
+      "name": "蜂鸟",
+      "category": "normal"
+    },
+    {
+      "id": "m043",
+      "name": "刺猬",
+      "category": "normal"
+    },
+    {
+      "id": "m044",
+      "name": "狐獴",
+      "category": "normal"
+    },
+    {
+      "id": "m045",
+      "name": "树懒",
+      "category": "normal"
+    },
+    {
+      "id": "m046",
+      "name": "考拉",
+      "category": "normal"
+    },
+    {
+      "id": "m047",
+      "name": "羊驼",
+      "category": "normal"
+    },
+    {
+      "id": "m048",
+      "name": "松鼠",
+      "category": "normal"
+    },
+    {
+      "id": "m049",
+      "name": "海豹",
+      "category": "normal"
+    },
+    {
+      "id": "m050",
+      "name": "章鱼",
+      "category": "normal"
+    },
+    {
+      "id": "m051",
+      "name": "水母",
+      "category": "normal"
+    },
+    {
+      "id": "m052",
+      "name": "蝴蝶",
+      "category": "normal"
+    },
+    {
+      "id": "m053",
+      "name": "独角仙",
+      "category": "normal"
+    },
+    {
+      "id": "m054",
+      "name": "螳螂",
+      "category": "normal"
+    },
+    {
+      "id": "m055",
+      "name": "蜗牛",
+      "category": "normal"
+    },
+    {
+      "id": "m056",
+      "name": "变色龙",
+      "category": "normal"
+    },
+    {
+      "id": "m057",
+      "name": "鬣蜥",
+      "category": "normal"
+    },
+    {
+      "id": "m058",
+      "name": "雪雁",
+      "category": "normal"
+    },
+    {
+      "id": "m059",
+      "name": "火烈鸟",
+      "category": "normal"
+    },
+    {
+      "id": "m060",
+      "name": "企鹅",
+      "category": "normal"
+    },
+    {
+      "id": "m061",
+      "name": "袋鼠",
+      "category": "normal"
+    },
+    {
+      "id": "m062",
+      "name": "鸵鸟",
+      "category": "normal"
+    },
+    {
+      "id": "m063",
+      "name": "犀牛",
+      "category": "normal"
+    },
+    {
+      "id": "m064",
+      "name": "河马",
+      "category": "normal"
+    },
+    {
+      "id": "m065",
+      "name": "海象",
+      "category": "normal"
+    },
+    {
+      "id": "m066",
+      "name": "水豚",
+      "category": "normal"
+    },
+    {
+      "id": "m067",
+      "name": "狐猴",
+      "category": "normal"
+    },
+    {
+      "id": "m068",
+      "name": "犰狳",
+      "category": "normal"
+    },
+    {
+      "id": "m069",
+      "name": "鸭嘴兽",
+      "category": "normal"
+    },
+    {
+      "id": "m070",
+      "name": "貂",
+      "category": "normal"
+    },
+    {
+      "id": "m071",
+      "name": "蝙蝠",
+      "category": "normal"
+    },
+    {
+      "id": "m072",
+      "name": "鼹鼠",
+      "category": "normal"
+    },
+    {
+      "id": "m073",
+      "name": "貂熊",
+      "category": "normal"
+    },
+    {
+      "id": "m074",
+      "name": "鸬鹚",
+      "category": "normal"
+    },
+    {
+      "id": "m075",
+      "name": "鹈鹕",
+      "category": "normal"
+    },
+    {
+      "id": "m076",
+      "name": "孔雀",
+      "category": "normal"
+    },
+    {
+      "id": "m077",
+      "name": "天鹅",
+      "category": "normal"
+    },
+    {
+      "id": "m078",
+      "name": "螃蟹",
+      "category": "normal"
+    },
+    {
+      "id": "m079",
+      "name": "蝎子",
+      "category": "normal"
+    },
+    {
+      "id": "m080",
+      "name": "蜘蛛",
+      "category": "normal"
+    }
+  ],
+  "hidden": [],
+  "updatedAt": 1790303644303.4473
+}

@@ -1,0 +1,38 @@
+{
+  "name": "class-pet-garden",
+  "version": "1.0.0",
+  "description": "东郭工作室·班级宠物园 — 班级积分管理 + 电子宠物养成系统",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "start": "concurrently \"npm run dev\" \"npm run server\"",
+    "deploy": "npm run build && cp -r dist/* /var/www/ && chown -R www-data:www-data /var/www",
+    "stats": "node server/scripts/teachers.mjs",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "pinia": "^2.1.0",
+    "pinyin-pro": "^3.28.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vue/test-utils": "^2.4.6",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^8.2.0",
+    "happy-dom": "^20.8.4",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0",
+    "vitest": "^4.1.0",
+    "vue-tsc": "^2.0.0"
+  }
+}

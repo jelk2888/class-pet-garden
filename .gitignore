@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Database
+*.db
+*.db-wal
+*.db-shm
+server/data/*.db
+server/dongguo-pet.db
+data/
+
+# Backups
+backups/
+*.bak
+*.bak.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+server.log
+server.pid
+
+# Environment
+.env
+.env.local
+opencode.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Large / local-only assets（完整宠物图见群晖部署包）
+_ref/
+
+# Pet image folders (keep README only)
+public/pets/*/
+
+# Temp scripts
+server/scripts/_*.mjs
+server/scripts/_*.py
+
+# Bundled toolchains / agent skills (local)
+.tools/
+.agents/
+agent-transcripts/
+
+dist/pets/
+
