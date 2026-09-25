@@ -111,15 +111,31 @@ router.get('/', authMiddleware, (req, res) => {
   const { classId, studentId, page = 1, pageSize = 20 } = req.query
   const offset = (Number(page) - 1) * Number(pageSize)
 
-  let countQuery = 'SELECT COUNT(*) as total FROM evaluation_records er JOIN classes c ON er.class_id = c.id'
-  let query = 'SELECT er.*, s.name as student_name FROM evaluation_records er JOIN students s ON er.student_id = s.id JOIN classes c ON er.class_id = c.id'
+  if (classId && !verifyClassOwnership(String(classId), req.userId)) {
+    return res.status(403).json({ error: '无权访问此班级' })
+  }
+
+  let countQuery = `
+    SELECT COUNT(*) as total FROM evaluation_records er
+    JOIN classes c ON er.class_id = c.id
+  `
+  let query = `
+    SELECT er.*, s.name as student_name, u.username as teacher_name
+    FROM evaluation_records er
+    JOIN students s ON er.student_id = s.id
+    JOIN classes c ON er.class_id = c.id
+    LEFT JOIN users u ON u.id = er.user_id
+  `
   const params = []
   const countParams = []
 
-  params.push(req.userId)
-  countParams.push(req.userId)
+  const memberCond = `(c.user_id = ? OR EXISTS (
+    SELECT 1 FROM class_teachers ct WHERE ct.class_id = c.id AND ct.user_id = ?
+  ))`
+  const conditions = [memberCond]
+  params.push(req.userId, req.userId)
+  countParams.push(req.userId, req.userId)
 
-  const conditions = ['c.user_id = ?']
   if (classId) {
     conditions.push('er.class_id = ?')
     params.push(classId)

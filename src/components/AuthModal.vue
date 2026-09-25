@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { rememberLoggedInTeacher, useTeacherAccounts } from '@/composables/useTeacherAccounts'
 
 interface Props {
   show: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
   login: [user: { id: string; username: string; isGuest: boolean }]
 }>()
 
 const { api, setUser } = useAuth()
+const { getLoginPrefill, clearLoginPrefill } = useTeacherAccounts()
 
 const mode = ref<'login' | 'register'>('login')
 const username = ref('')
@@ -20,6 +22,20 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref('')
+
+watch(() => props.show, (v) => {
+  if (v) {
+    const prefill = getLoginPrefill()
+    if (prefill) {
+      username.value = prefill
+      mode.value = 'login'
+      clearLoginPrefill()
+    }
+    password.value = ''
+    confirmPassword.value = ''
+    error.value = ''
+  }
+})
 
 const title = computed(() => mode.value === 'login' ? '登录' : '注册')
 const submitText = computed(() => {
@@ -60,13 +76,10 @@ async function handleSubmit() {
     })
     
     if (res.data.success) {
-      // 保存用户信息
       setUser(res.data.user, res.data.token)
-      
+      rememberLoggedInTeacher(res.data.user.username)
       emit('login', res.data.user)
       emit('close')
-      
-      // 刷新页面，让所有数据重新加载
       window.location.reload()
     }
   } catch (err: any) {
@@ -84,7 +97,6 @@ function switchMode() {
 }
 
 function guestLogin() {
-  // 游客登录使用默认 token
   const guestUser = { id: 'guest', username: '游客', isGuest: true }
   localStorage.setItem('token', 'guest')
   localStorage.setItem('user', JSON.stringify(guestUser))

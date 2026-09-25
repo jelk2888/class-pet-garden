@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { randomLevelAndExp } from '../utils/level.js'
 import { listPetsCatalog } from './petsStore.js'
-import { listCatalog } from './shopCatalogStore.js'
+import { listCatalog, seedCatalog } from './shopCatalogStore.js'
 
 export const GUEST_DEMO_TARGET = 40
 
@@ -45,6 +45,36 @@ function shuffle(arr) {
   return a
 }
 
+function seedGuestShop(classId, now = Date.now()) {
+  try {
+    seedCatalog('merge')
+  } catch { /* ignore */ }
+  const catalog = listCatalog({ includeDisabled: false })
+  const existing = new Set(
+    db.prepare('SELECT name FROM shop_items WHERE class_id = ?').all(classId).map((r) => r.name)
+  )
+  const ins = db.prepare(`INSERT INTO shop_items (id, class_id, name, description, cost, stock, emoji, enabled, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`)
+  let added = 0
+  for (const it of catalog) {
+    if (existing.has(it.name)) continue
+    ins.run(uuidv4(), classId, it.name, it.description || '', it.cost, it.stock ?? -1, it.emoji || '🎁', now)
+    existing.add(it.name)
+    added++
+  }
+  if (!existing.size) {
+    for (const it of [
+      { name: '免一次值日', cost: 15, emoji: '🧹' },
+      { name: '自选座位一天', cost: 25, emoji: '💺' },
+      { name: '小零食', cost: 10, emoji: '🍪' },
+    ]) {
+      ins.run(uuidv4(), classId, it.name, '', it.cost, -1, it.emoji, now)
+      added++
+    }
+  }
+  if (added) console.log(`✅ 游客演示班商城补充 ${added} 件商品（三站目录）`)
+}
+
 /**
  * @param {{ forceReassign?: boolean }} [opts]
  */
@@ -65,10 +95,25 @@ export function seedGuestDemoData(opts = {}) {
   const now = Date.now()
   if (!cls) {
     const id = uuidv4()
-    db.prepare('INSERT INTO classes (id, user_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
-      .run(id, guest.id, '游客演示班', now, now)
-    cls = { id, user_id: guest.id, name: '游客演示班' }
+    const invite = `GUEST${String(Math.floor(Math.random() * 900) + 100)}`
+    db.prepare(
+      'INSERT INTO classes (id, user_id, name, created_at, updated_at, invite_code) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, guest.id, '游客演示班', now, now, invite)
+    try {
+      db.prepare(`
+        INSERT OR IGNORE INTO class_teachers (id, class_id, user_id, role, joined_at)
+        VALUES (?, ?, ?, 'owner', ?)
+      `).run(`${id}_owner`, id, guest.id, now)
+    } catch { /* table may not exist yet on very old runs */ }
+    cls = { id, user_id: guest.id, name: '游客演示班', invite_code: invite }
     console.log('✅ 创建游客演示班')
+  } else {
+    try {
+      db.prepare(`
+        INSERT OR IGNORE INTO class_teachers (id, class_id, user_id, role, joined_at)
+        VALUES (?, ?, ?, 'owner', ?)
+      `).run(`${cls.id}_owner_${guest.id}`, cls.id, guest.id, now)
+    } catch { /* ignore */ }
   }
 
   const petPool = pickDemoPetIds()
@@ -127,31 +172,8 @@ export function seedGuestDemoData(opts = {}) {
     console.log(`✅ 游客演示班已重建 ${GUEST_DEMO_TARGET} 人（随机宠物 + 随机等级 0–8，图鉴 ${petPool.length} 种）`)
   }
 
-  const shopCount = db.prepare('SELECT count(*) as c FROM shop_items WHERE class_id = ?').get(cls.id).c
-  if (!shopCount) {
-    let seeded = false
-    try {
-      const catalog = listCatalog({ includeDisabled: false }).slice(0, 12)
-      if (catalog.length) {
-        const ins = db.prepare(`INSERT INTO shop_items (id, class_id, name, description, cost, stock, emoji, enabled, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`)
-        for (const it of catalog) {
-          ins.run(uuidv4(), cls.id, it.name, it.description || '', it.cost, it.stock ?? -1, it.emoji || '🎁', now)
-        }
-        seeded = true
-      }
-    } catch { /* ignore */ }
-    if (!seeded) {
-      const items = [
-        { name: '免一次值日', cost: 15, emoji: '🧹' },
-        { name: '自选座位一天', cost: 25, emoji: '💺' },
-        { name: '小零食', cost: 10, emoji: '🍪' },
-      ]
-      const ins = db.prepare(`INSERT INTO shop_items (id, class_id, name, description, cost, stock, emoji, enabled, created_at)
-        VALUES (?, ?, ?, '', ?, -1, ?, 1, ?)`)
-      for (const it of items) ins.run(uuidv4(), cls.id, it.name, it.cost, it.emoji, now)
-    }
-  }
+  // 积分商城：导入吾师/班宠/班级优目录（补缺）
+  seedGuestShop(cls.id, now)
 
   const taskCount = db.prepare('SELECT count(*) as c FROM class_tasks WHERE class_id = ?').get(cls.id).c
   if (!taskCount) {

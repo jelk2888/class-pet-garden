@@ -34,6 +34,18 @@ async function load() {
   items.value = shop.data.items || []
   recent.value = shop.data.recent || []
   students.value = stu.data.students || []
+  // 班级商城为空时自动从三站目录导入
+  if (!items.value.length) {
+    try {
+      const res = await api.post(`/shop/${currentClass.value.id}/import-catalog`, {})
+      if (res.data?.added) {
+        toast.success(`已自动导入 ${res.data.added} 件商城商品`)
+        const shop2 = await api.get(`/shop/${currentClass.value.id}`)
+        items.value = shop2.data.items || []
+        recent.value = shop2.data.recent || []
+      }
+    } catch { /* ignore */ }
+  }
 }
 
 async function loadCatalog() {

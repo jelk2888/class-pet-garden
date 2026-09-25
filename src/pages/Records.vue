@@ -245,7 +245,10 @@ onActivated(() => {
               <span class="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
                 {{ record.student_name?.charAt(0) || '?' }}
               </span>
-              <span class="font-medium text-gray-800 truncate">{{ record.student_name }}</span>
+              <div class="min-w-0">
+                <span class="font-medium text-gray-800 truncate block">{{ record.student_name }}</span>
+                <span v-if="record.teacher_name" class="text-[10px] text-gray-400 truncate block">教师 {{ record.teacher_name }}</span>
+              </div>
             </div>
 
             <div class="col-span-2">

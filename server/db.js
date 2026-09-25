@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { randomBytes } from 'crypto'
 import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -361,4 +362,65 @@ export function initDb() {
       FOREIGN KEY (group_id) REFERENCES student_groups(id)
     );
   `)
+
+  // 多教师入班：邀请码 + 任教教师表
+  try {
+    db.exec(`ALTER TABLE classes ADD COLUMN invite_code TEXT`)
+  } catch (e) {
+    // already exists
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS class_teachers (
+      id TEXT PRIMARY KEY,
+      class_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT DEFAULT 'teacher',
+      joined_at INTEGER,
+      UNIQUE(class_id, user_id),
+      FOREIGN KEY (class_id) REFERENCES classes(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+  `)
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_class_teachers_user ON class_teachers(user_id)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_class_teachers_class ON class_teachers(class_id)`)
+  try {
+    db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_invite_code ON classes(invite_code)`)
+  } catch (e) {
+    // ignore if duplicates somehow exist
+  }
+
+  // 为已有班级补邀请码；把班主任写入 class_teachers（role=owner）
+  function genInviteCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let code = ''
+    const bytes = randomBytes(6)
+    for (let i = 0; i < 6; i++) code += chars[bytes[i] % chars.length]
+    return code
+  }
+
+  const classesWithoutCode = db.prepare(
+    `SELECT id, user_id FROM classes WHERE invite_code IS NULL OR invite_code = ''`
+  ).all()
+  const setCode = db.prepare('UPDATE classes SET invite_code = ? WHERE id = ?')
+  for (const c of classesWithoutCode) {
+    let code
+    let tries = 0
+    do {
+      code = genInviteCode()
+      tries++
+    } while (db.prepare('SELECT 1 FROM classes WHERE invite_code = ?').get(code) && tries < 20)
+    setCode.run(code, c.id)
+  }
+
+  const ensureOwner = db.prepare(`
+    INSERT OR IGNORE INTO class_teachers (id, class_id, user_id, role, joined_at)
+    VALUES (?, ?, ?, 'owner', ?)
+  `)
+  const allClasses = db.prepare('SELECT id, user_id FROM classes WHERE user_id IS NOT NULL').all()
+  const now = Date.now()
+  for (const c of allClasses) {
+    ensureOwner.run(`${c.id}_owner_${c.user_id}`, c.id, c.user_id, now)
+  }
 }

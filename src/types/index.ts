@@ -2,6 +2,10 @@ export interface Class {
   id: string
   name: string
   created_at: number
+  invite_code?: string
+  role?: 'owner' | 'teacher'
+  is_owner?: boolean
+  teacher_count?: number
 }
 
 export interface Student {
@@ -29,6 +33,7 @@ export interface EvaluationRecord {
   class_id: string
   student_id: string
   student_name?: string
+  teacher_name?: string
   points: number
   reason: string
   category: string
