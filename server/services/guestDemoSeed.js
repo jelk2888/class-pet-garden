@@ -4,7 +4,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { randomLevelAndExp } from '../utils/level.js'
-import { listPetsCatalog } from './petsStore.js'
+import { listPetsCatalog, hasPetAssets } from './petsStore.js'
 import { listCatalog, seedCatalog } from './shopCatalogStore.js'
 
 export const GUEST_DEMO_TARGET = 40
@@ -21,19 +21,19 @@ const GUEST_DEMO_NAMES = [
 ]
 
 const FALLBACK_PETS = [
-  'corgi', 'shiba', 'golden-retriever', 'husky', 'samoyed',
-  'tabby-cat', 'orange-cat', 'ragdoll-cat', 'hamster', 'call-duck',
-  'alpaca', 'red-panda', 'lop-rabbit', 'bichon', 'border-collie',
-  'west-highland', 'persian-cat', 'angora-rabbit', 'winter-hamster', 'unicorn',
-  'pixiu', 'suanni', 'white-tiger', 'azure-dragon', 'vermilion-bird',
+  'm001', 'm002', 'm003', 'm010', 'm020',
+  'my-001', 'my-010', 'my-020', 'shiba', 'samoyed',
+  'west-highland', 'tabby-cat', 'orange-cat', 'unicorn', 'pixiu',
 ]
 
 function pickDemoPetIds() {
   try {
-    const ids = listPetsCatalog().map((p) => p.id).filter(Boolean)
+    const ids = listPetsCatalog().map((p) => p.id).filter((id) => hasPetAssets(id))
     if (ids.length >= 10) return ids
   } catch { /* ignore */ }
-  return FALLBACK_PETS
+  return FALLBACK_PETS.filter((id) => {
+    try { return hasPetAssets(id) } catch { return false }
+  })
 }
 
 function shuffle(arr) {
@@ -97,8 +97,8 @@ export function seedGuestDemoData(opts = {}) {
     const id = uuidv4()
     const invite = `GUEST${String(Math.floor(Math.random() * 900) + 100)}`
     db.prepare(
-      'INSERT INTO classes (id, user_id, name, created_at, updated_at, invite_code) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(id, guest.id, '游客演示班', now, now, invite)
+      'INSERT INTO classes (id, user_id, name, created_at, updated_at, invite_code, ui_theme) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, guest.id, '游客演示班', now, now, invite, 'forest')
     try {
       db.prepare(`
         INSERT OR IGNORE INTO class_teachers (id, class_id, user_id, role, joined_at)

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { verifyClassOwnership, verifyStudentOwnership } from '../middleware/ownership.js'
-import { calculateLevel } from '../utils/level.js'
+import { calculateLevel, getLevelConfigForClass } from '../utils/level.js'
 
 const router = Router()
 
@@ -83,7 +83,7 @@ router.post('/task/:id/complete', authMiddleware, (req, res) => {
       if (!st || st.class_id !== t.class_id) continue
       const newPoints = (st.total_points || 0) + pts
       const newExp = Math.max(0, (st.pet_exp || 0) + pts)
-      const newLevel = calculateLevel(newExp)
+      const newLevel = calculateLevel(newExp, getLevelConfigForClass(t.class_id))
       db.prepare('UPDATE students SET total_points = ?, pet_exp = ?, pet_level = ? WHERE id = ?')
         .run(newPoints, newExp, newLevel, sid)
       db.prepare(`INSERT INTO class_task_completions (id, task_id, student_id, points, created_at) VALUES (?, ?, ?, ?, ?)`)

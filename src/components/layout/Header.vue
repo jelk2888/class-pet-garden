@@ -15,6 +15,7 @@ import ClassTeachersModal from '@/components/modals/ClassTeachersModal.vue'
 import SwitchTeacherModal from '@/components/modals/SwitchTeacherModal.vue'
 import ThemePickerModal from '@/components/modals/ThemePickerModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import NavIcon from '@/components/layout/NavIcon.vue'
 
 defineProps<{ batchMode?: boolean }>()
 
@@ -280,27 +281,25 @@ onMounted(() => {
 
     <div class="theme-nav-bar backdrop-blur px-2 sm:px-4">
       <nav class="flex items-center gap-0.5 overflow-x-auto py-1.5 text-sm no-scrollbar">
-        <router-link to="/overview" class="nav-tab theme-nav-tab" :class="isActive('/overview') && 'theme-nav-tab-active'">📊 总览</router-link>
-        <router-link to="/wizard" class="nav-tab theme-nav-tab" :class="isActive('/wizard') && 'theme-nav-tab-active'">🧭 开班向导</router-link>
-        <router-link to="/" class="nav-tab theme-nav-tab" :class="isActive('/') && 'theme-nav-tab-active'">🐾 宠物教室</router-link>
-        <router-link to="/students" class="nav-tab theme-nav-tab" :class="isActive('/students') && 'theme-nav-tab-active'">👥 学生</router-link>
-        <router-link to="/ranking" class="nav-tab theme-nav-tab" :class="isActive('/ranking') && 'theme-nav-tab-active'">🏆 排行</router-link>
-        <router-link to="/tasks" class="nav-tab theme-nav-tab" :class="isActive('/tasks') && 'theme-nav-tab-active'">✅ 任务</router-link>
-        <router-link to="/honors" class="nav-tab theme-nav-tab" :class="isActive('/honors') && 'theme-nav-tab-active'">🎖️ 荣誉墙</router-link>
-        <router-link to="/groups" class="nav-tab theme-nav-tab" :class="isActive('/groups') && 'theme-nav-tab-active'">🐣 一组一宠</router-link>
-        <router-link to="/toolbox" class="nav-tab theme-nav-tab" :class="isActive('/toolbox') && 'theme-nav-tab-active'">🧰 工具箱</router-link>
-        <router-link to="/shop" class="nav-tab theme-nav-tab" :class="isActive('/shop') && 'theme-nav-tab-active'">🛒 积分商城</router-link>
+        <router-link to="/overview" class="nav-tab theme-nav-tab" :class="isActive('/overview') && 'theme-nav-tab-active'"><NavIcon name="home" /> 首页</router-link>
+        <router-link to="/wizard" class="nav-tab theme-nav-tab" :class="isActive('/wizard') && 'theme-nav-tab-active'"><NavIcon name="wizard" /> 开班向导</router-link>
+        <router-link to="/" class="nav-tab theme-nav-tab" :class="isActive('/') && 'theme-nav-tab-active'"><NavIcon name="classroom" /> 宠物教室</router-link>
+        <router-link to="/ranking" class="nav-tab theme-nav-tab" :class="isActive('/ranking') && 'theme-nav-tab-active'"><NavIcon name="ranking" /> 排行</router-link>
+        <router-link to="/tasks" class="nav-tab theme-nav-tab" :class="isActive('/tasks') && 'theme-nav-tab-active'"><NavIcon name="tasks" /> 任务</router-link>
+        <router-link to="/honors" class="nav-tab theme-nav-tab" :class="isActive('/honors') && 'theme-nav-tab-active'"><NavIcon name="honors" /> 荣誉墙</router-link>
+        <router-link to="/toolbox" class="nav-tab theme-nav-tab" :class="isActive('/toolbox') && 'theme-nav-tab-active'"><NavIcon name="toolbox" /> 教师工具箱</router-link>
+        <router-link to="/shop" class="nav-tab theme-nav-tab" :class="isActive('/shop') && 'theme-nav-tab-active'"><NavIcon name="shop" /> 积分商城</router-link>
+        <router-link to="/manage" class="nav-tab theme-nav-tab" :class="isActive('/manage') && 'theme-nav-tab-active'"><NavIcon name="manage" /> 班级管理</router-link>
 
         <div class="relative ml-auto shrink-0">
-          <button @click="showMoreNav = !showMoreNav" class="nav-tab theme-nav-tab">⋯ 更多</button>
+          <button @click="showMoreNav = !showMoreNav" class="nav-tab theme-nav-tab"><NavIcon name="more" /> 更多</button>
           <div v-if="showMoreNav" @click="showMoreNav = false" class="fixed inset-0 z-40"></div>
           <div v-if="showMoreNav" class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border py-1.5 w-40 z-50">
-            <router-link to="/records" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/records') && 'font-medium theme-link'">📋 评价记录</router-link>
-            <router-link to="/preview" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/preview') && 'font-medium theme-link'">📖 宠物图鉴</router-link>
-            <router-link to="/settings" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/settings') && 'font-medium theme-link'">⚙️ 规则设置</router-link>
-            <router-link to="/posts" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/posts') && 'font-medium theme-link'">💬 留言板</router-link>
-            <button v-if="currentClass" class="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" @click="showMoreNav=false; openThemePicker()">🎨 页面样式</button>
-            <router-link v-if="isAdmin" to="/admin" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/admin') && 'font-medium theme-link'">🔐 系统管理</router-link>
+            <router-link to="/records" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/records') && 'font-medium theme-link'">评价记录</router-link>
+            <router-link to="/preview" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/preview') && 'font-medium theme-link'">宠物图鉴</router-link>
+            <router-link to="/posts" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/posts') && 'font-medium theme-link'">留言板</router-link>
+            <button v-if="currentClass" class="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" @click="showMoreNav=false; openThemePicker()">页面样式</button>
+            <router-link v-if="isAdmin" to="/admin" class="block px-3 py-2 text-sm hover:bg-[var(--accent-soft)]" :class="isActive('/admin') && 'font-medium theme-link'">系统管理</router-link>
           </div>
         </div>
       </nav>
@@ -327,7 +326,7 @@ onMounted(() => {
 
 <style scoped>
 .nav-tab {
-  @apply px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors shrink-0;
+  @apply px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors shrink-0 inline-flex items-center gap-1.5;
 }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

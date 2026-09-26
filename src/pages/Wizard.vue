@@ -127,7 +127,7 @@ watch(currentClass, () => refreshCount())
         <p class="text-gray-500 mb-6">已有 {{ studentCount }} 名学生</p>
         <div class="flex flex-wrap gap-3 justify-center">
           <button @click="showImportForm = true" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold">📥 批量导入</button>
-          <router-link to="/students" class="px-6 py-3 rounded-2xl border border-orange-200 text-orange-600 font-bold">👥 学生管理</router-link>
+          <router-link to="/manage/students" class="px-6 py-3 rounded-2xl border border-orange-200 text-orange-600 font-bold">👥 学生管理</router-link>
           <button v-if="canStep3" @click="step = 3" class="px-6 py-3 rounded-2xl bg-white border text-gray-600 font-bold">下一步 →</button>
         </div>
       </section>
@@ -138,7 +138,7 @@ watch(currentClass, () => refreshCount())
         <p class="text-gray-500 mb-6">在宠物教室评价个人；用「一组一宠」记集体表现——个人分不进小组能量。</p>
         <div class="grid sm:grid-cols-2 gap-3 text-left max-w-lg mx-auto mb-6">
           <router-link to="/" class="p-4 rounded-2xl bg-orange-50 hover:bg-orange-100">🐾 宠物教室</router-link>
-          <router-link to="/groups" class="p-4 rounded-2xl bg-violet-50 hover:bg-violet-100">🐣 一组一宠</router-link>
+          <router-link to="/manage/groups" class="p-4 rounded-2xl bg-violet-50 hover:bg-violet-100">🐣 小组管理</router-link>
           <router-link to="/tasks" class="p-4 rounded-2xl bg-sky-50 hover:bg-sky-100">✅ 任务中心</router-link>
           <router-link to="/shop" class="p-4 rounded-2xl bg-amber-50 hover:bg-amber-100">🛒 积分商城</router-link>
         </div>

@@ -1,9 +1,16 @@
-import Database from 'better-sqlite3'
+/**
+ * SQLite via sql.js（纯 WASM）— 与远程课程管理 / classroom-pro 相同方案。
+ * 避免群晖 Web Station 上 better-sqlite3 的 NODE_MODULE_VERSION / GLIBC / dlopen 失败。
+ * API 对齐 better-sqlite3：prepare/get/all/run/exec/transaction/pragma。
+ */
+import initSqlJs from 'sql.js'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { randomBytes } from 'crypto'
 import fs from 'fs'
+import { createRequire } from 'module'
 
+const require = createRequire(import.meta.url)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
@@ -13,9 +20,9 @@ const isDocker = fs.existsSync('/.dockerenv')
  * 数据库路径（群晖友好）：
  * 1) TEST_DB=1 → 内存库
  * 2) DB_PATH=绝对/相对路径 → 指定文件
- * 3) DATA_DIR=目录 → {DATA_DIR}/dongguo-pet.db（推荐群晖：/volume1/class-pet-data）
+ * 3) DATA_DIR=目录 → {DATA_DIR}/dongguo-pet.db
  * 4) Docker → /db/dongguo-pet.db
- * 5) 默认 → server/data/dongguo-pet.db（与代码分离，便于备份）
+ * 5) 默认 → server/data/dongguo-pet.db
  */
 function resolveDbPath() {
   if (process.env.TEST_DB) return ':memory:'
@@ -29,30 +36,182 @@ function resolveDbPath() {
     fs.mkdirSync('/db', { recursive: true })
     return '/db/dongguo-pet.db'
   }
-  // 默认写到 server/data，避免直接堆在代码根；群晖请用 DATA_DIR 指到可写卷
   const dataDir = join(__dirname, 'data')
   fs.mkdirSync(dataDir, { recursive: true })
-  // 兼容旧版：若根目录已有 dongguo-pet.db，继续使用，避免升级丢库
   const legacy = join(__dirname, 'dongguo-pet.db')
   if (fs.existsSync(legacy)) return legacy
   return join(dataDir, 'dongguo-pet.db')
 }
 
-export const dbPath = resolveDbPath()
-export const db = new Database(dbPath)
-
-// 群晖 NAS / 多进程读：WAL + 忙等待，降低 “database is locked”
-if (dbPath !== ':memory:') {
-  try {
-    db.pragma('journal_mode = WAL')
-    db.pragma('synchronous = NORMAL')
-    db.pragma('busy_timeout = 5000')
-    db.pragma('foreign_keys = ON')
-  } catch (e) {
-    console.warn('SQLite pragma 设置失败:', e?.message || e)
+function toBindArgs(params) {
+  if (!params || params.length === 0) return undefined
+  if (
+    params.length === 1 &&
+    params[0] != null &&
+    typeof params[0] === 'object' &&
+    !Array.isArray(params[0])
+  ) {
+    const bind = {}
+    for (const [k, v] of Object.entries(params[0])) {
+      const name = String(k).replace(/^[@:$]/, '')
+      bind['@' + name] = v
+      bind[':' + name] = v
+      bind['$' + name] = v
+    }
+    return bind
   }
-  console.log(`💾 SQLite: ${dbPath}`)
+  if (params.length === 1 && Array.isArray(params[0])) return params[0]
+  return params
 }
+
+class Statement {
+  constructor(owner, sql) {
+    this.owner = owner
+    this.sql = sql
+  }
+
+  get(...params) {
+    const stmt = this.owner._raw.prepare(this.sql)
+    try {
+      const bind = toBindArgs(params)
+      if (bind) stmt.bind(bind)
+      if (stmt.step()) return stmt.getAsObject()
+      return undefined
+    } finally {
+      stmt.free()
+    }
+  }
+
+  all(...params) {
+    const stmt = this.owner._raw.prepare(this.sql)
+    const rows = []
+    try {
+      const bind = toBindArgs(params)
+      if (bind) stmt.bind(bind)
+      while (stmt.step()) rows.push(stmt.getAsObject())
+      return rows
+    } finally {
+      stmt.free()
+    }
+  }
+
+  run(...params) {
+    const bind = toBindArgs(params)
+    this.owner._raw.run(this.sql, bind)
+    const changes = this.owner._raw.getRowsModified()
+    let lastInsertRowid = 0
+    try {
+      const r = this.owner._raw.exec('SELECT last_insert_rowid() AS id')
+      if (r[0]?.values?.[0]?.[0] != null) lastInsertRowid = Number(r[0].values[0][0])
+    } catch {
+      /* ignore */
+    }
+    if (!this.owner._inTx) this.owner._persist()
+    return { changes, lastInsertRowid }
+  }
+}
+
+class SqlJsDatabase {
+  constructor(raw, filePath) {
+    this._raw = raw
+    this._path = filePath
+    this._inTx = false
+  }
+
+  prepare(sql) {
+    return new Statement(this, sql)
+  }
+
+  exec(sql) {
+    this._raw.exec(sql)
+    if (!this._inTx) this._persist()
+  }
+
+  pragma(source) {
+    try {
+      this._raw.run('PRAGMA ' + source)
+    } catch {
+      /* sql.js 部分 pragma 可忽略 */
+    }
+  }
+
+  transaction(fn) {
+    return (...args) => {
+      this._raw.run('BEGIN')
+      this._inTx = true
+      try {
+        const result = fn(...args)
+        this._raw.run('COMMIT')
+        this._inTx = false
+        this._persist()
+        return result
+      } catch (e) {
+        try {
+          this._raw.run('ROLLBACK')
+        } catch {
+          /* ignore */
+        }
+        this._inTx = false
+        throw e
+      }
+    }
+  }
+
+  close() {
+    try {
+      this._persist()
+    } catch {
+      /* ignore */
+    }
+    try {
+      this._raw.close()
+    } catch {
+      /* ignore */
+    }
+  }
+
+  _persist() {
+    if (!this._path || this._path === ':memory:') return
+    const data = this._raw.export()
+    fs.writeFileSync(this._path, Buffer.from(data))
+  }
+}
+
+export const dbPath = resolveDbPath()
+
+const wasmPath = require.resolve('sql.js/dist/sql-wasm.wasm')
+const wasmBinary = fs.readFileSync(wasmPath)
+const SQL = await initSqlJs({ wasmBinary })
+
+let raw
+if (dbPath === ':memory:') {
+  raw = new SQL.Database()
+} else if (fs.existsSync(dbPath)) {
+  try {
+    raw = new SQL.Database(fs.readFileSync(dbPath))
+  } catch (e) {
+    const bak = dbPath + '.bak-' + Date.now()
+    try {
+      fs.copyFileSync(dbPath, bak)
+      console.warn('[db] 旧库无法直接打开（可能含 WAL），已备份为', bak)
+    } catch {
+      /* ignore */
+    }
+    raw = new SQL.Database()
+  }
+} else {
+  raw = new SQL.Database()
+}
+
+export const db = new SqlJsDatabase(raw, dbPath)
+db.pragma('foreign_keys = ON')
+if (dbPath !== ':memory:') {
+  console.log('💾 SQLite(sql.js): ' + dbPath)
+} else {
+  console.log('💾 SQLite(sql.js): :memory:')
+}
+console.log('[db] driver: sql.js（群晖 Web Station 兼容，无需 better-sqlite3）')
+
 
 // 初始化数据库表
 export function initDb() {
@@ -391,12 +550,68 @@ export function initDb() {
     // ignore if duplicates somehow exist
   }
 
+  // 班级座位表（教师工具箱）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS class_seat_charts (
+      id TEXT PRIMARY KEY,
+      class_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      rows INTEGER NOT NULL,
+      pattern TEXT NOT NULL,
+      podium TEXT DEFAULT 'top',
+      seats TEXT NOT NULL,
+      created_at INTEGER,
+      updated_at INTEGER,
+      FOREIGN KEY (class_id) REFERENCES classes(id)
+    );
+  `)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_seat_charts_class ON class_seat_charts(class_id)`)
+
   // 班级界面主题
   try {
-    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'peach'`)
+    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'forest'`)
   } catch (e) {
     // already exists
   }
+
+  // 班级等级经验配置（JSON 数组 8 段）
+  try {
+    db.exec(`ALTER TABLE classes ADD COLUMN level_config TEXT`)
+  } catch (e) {
+    // already exists
+  }
+
+  // 教师颁发微章：类型定义
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS micro_badge_types (
+      id TEXT PRIMARY KEY,
+      class_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      emoji TEXT DEFAULT '🏅',
+      color TEXT DEFAULT '#f59e0b',
+      created_at INTEGER,
+      FOREIGN KEY (class_id) REFERENCES classes(id)
+    );
+  `)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_micro_badge_types_class ON micro_badge_types(class_id)`)
+
+  // 教师颁发微章：发放记录
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS micro_badge_awards (
+      id TEXT PRIMARY KEY,
+      class_id TEXT NOT NULL,
+      student_id TEXT NOT NULL,
+      type_id TEXT NOT NULL,
+      note TEXT,
+      awarded_by TEXT,
+      earned_at INTEGER,
+      FOREIGN KEY (class_id) REFERENCES classes(id),
+      FOREIGN KEY (student_id) REFERENCES students(id),
+      FOREIGN KEY (type_id) REFERENCES micro_badge_types(id)
+    );
+  `)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_micro_badge_awards_class ON micro_badge_awards(class_id)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_micro_badge_awards_student ON micro_badge_awards(student_id)`)
 
   // 为已有班级补邀请码；把班主任写入 class_teachers（role=owner）
   function genInviteCode() {

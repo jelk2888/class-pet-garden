@@ -3,7 +3,7 @@
 将「我的宠物」四阶段（蛋/幼年/青年/成年）扩展为系统九级 lv0–lv8，
 并为每级合成明显不同的场景背景。输出到班级宠物系统 public/pets/{id}/。
 
-中间等级用阶段混合（alpha blend）+ 缩放/光效拉开差异；
+中间等级用「单阶段贴图 + 缩放/背景/色彩」拉开差异（禁止跨阶段像素混合，避免重影）；
 若后续有 Gemini 九宫格，可用 split_9grid_to_levels.py 覆盖对应目录。
 
 用法:
@@ -325,15 +325,14 @@ def enhance_for_level(im: Image.Image, level: int) -> Image.Image:
 def compose_level(files: dict, level: int, size: int = SIZE) -> Image.Image:
     plan = LEVEL_PLAN[level]
     bg = make_background(size, plan["theme"], level)
-    primary = load_stage(files, plan["primary"])
-    secondary = load_stage(files, plan["secondary"])
-    layer_a = fit_rgba(primary, size, plan["scale"])
-    layer_b = fit_rgba(secondary, size, plan["scale"])
-    layer = blend_layers(layer_a, layer_b, plan["blend"])
+    # 禁止把两张姿态不同的阶段图做 Image.blend —— 像素叠在一起会形成明显重影。
+    # 中间等级只选用更接近的那一阶段，用缩放/背景/enhance 区分等级。
+    stage = plan["secondary"] if float(plan.get("blend") or 0) >= 0.5 else plan["primary"]
+    sprite = load_stage(files, stage)
+    layer = fit_rgba(sprite, size, plan["scale"])
     if level == 0:
         layer = layer.filter(ImageFilter.SMOOTH)
     elif level == 1:
-        # 破壳：略缩小 + 轻模糊模拟刚破壳
         layer = layer.filter(ImageFilter.SMOOTH_MORE)
     out = Image.alpha_composite(bg.convert("RGBA"), layer)
     return enhance_for_level(out.convert("RGB"), level)

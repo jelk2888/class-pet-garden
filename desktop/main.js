@@ -16,7 +16,7 @@ function loadConfig() {
     }
   } catch (_) {}
   return {
-    serverUrl: process.env.PET_GARDEN_URL || 'http://127.0.0.1:3000',
+    serverUrl: process.env.PET_GARDEN_URL || 'http://127.0.0.1:4158',
   }
 }
 
@@ -30,7 +30,7 @@ let cfg = loadConfig()
 
 function normalizeUrl(url) {
   let u = String(url || '').trim()
-  if (!u) return 'http://127.0.0.1:3000'
+  if (!u) return 'http://127.0.0.1:4158'
   if (!/^https?:\/\//i.test(u)) u = 'http://' + u
   return u.replace(/\/+$/, '')
 }
@@ -134,7 +134,7 @@ function buildMenu() {
               defaultId: 0,
               title: '服务器地址',
               message: '当前服务器：\n' + normalizeUrl(cfg.serverUrl),
-              detail: '可在设置页修改群晖 / 本机地址，例如 http://192.168.1.10:3000',
+              detail: '可在设置页修改群晖 / 本机地址，例如 http://192.168.1.10:4158',
             })
             if (r.response === 0) {
               mainWindow.loadFile(path.join(__dirname, 'settings.html'))

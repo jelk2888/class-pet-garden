@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { verifyClassOwnership, verifyRecordOwnership } from '../middleware/ownership.js'
-import { calculateLevel } from '../utils/level.js'
+import { calculateLevel, getLevelConfigForClass } from '../utils/level.js'
 
 const router = Router()
 
@@ -67,7 +67,7 @@ router.post('/', authMiddleware, (req, res) => {
 
   if (student && student.pet_type) {
     const newExp = Math.max(0, student.total_points)
-    const newLevel = calculateLevel(newExp)
+    const newLevel = calculateLevel(newExp, getLevelConfigForClass(classId))
 
     let graduated = false
     if (newLevel === 8 && student.pet_level < 8) {
@@ -187,7 +187,7 @@ router.delete('/latest', authMiddleware, (req, res) => {
 
   const expChange = Math.abs(record.points)
   const newExp = Math.max(0, student.pet_exp - expChange)
-  const newLevel = calculateLevel(newExp)
+  const newLevel = calculateLevel(newExp, getLevelConfigForClass(classId))
   const newTotalPoints = student.total_points - record.points
   const statusCheck = checkPetStatus(newTotalPoints, student.pet_status)
   
@@ -215,7 +215,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
 
   const expChange = Math.abs(record.points)
   const newExp = Math.max(0, student.pet_exp - expChange)
-  const newLevel = calculateLevel(newExp)
+  const newLevel = calculateLevel(newExp, getLevelConfigForClass(record.class_id))
   const newTotalPoints = student.total_points - record.points
   const statusCheck = checkPetStatus(newTotalPoints, student.pet_status)
   

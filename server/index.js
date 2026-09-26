@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { initDb, db } from './db.js'
 import { hashPassword } from './utils/password.js'
-import { PETS_ROOT } from './services/petsStore.js'
+import { PETS_ROOT, repairOrphanPetAssignments } from './services/petsStore.js'
 import { seedGuestDemoData } from './services/guestDemoSeed.js'
 
 // 导入路由
@@ -26,10 +26,12 @@ import shopRoutes from './routes/shop.js'
 import groupsRoutes from './routes/groups.js'
 import classTasksRoutes from './routes/classTasks.js'
 import petsRoutes from './routes/pets.js'
+import seatingRoutes from './routes/seating.js'
+import microBadgeRoutes from './routes/microBadges.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
-const PORT = Number(process.env.PORT) || 3000
+const PORT = Number(process.env.PORT) || 4158
 const HOST = process.env.HOST || '0.0.0.0'
 /** 生产静态目录：优先环境变量，其次 ../dist（与 server 同级） */
 const STATIC_DIR = process.env.STATIC_DIR
@@ -113,6 +115,11 @@ if (classesWithoutUser.length > 0) {
 
 // 游客演示班：40 人随机宠物/等级
 seedGuestDemoData()
+try {
+  repairOrphanPetAssignments(db)
+} catch (e) {
+  console.warn('[pets] repairOrphanPetAssignments:', e?.message || e)
+}
 
 // 初始化默认评价规则
 const rulesCount = db.prepare('SELECT COUNT(*) as count FROM evaluation_rules').get()
@@ -143,6 +150,8 @@ app.use('/api/revival', revivalRoutes)
 app.use('/api/shop', shopRoutes)
 app.use('/api/groups', groupsRoutes)
 app.use('/api/tasks', classTasksRoutes)
+app.use('/api/seating', seatingRoutes)
+app.use('/api/micro-badges', microBadgeRoutes)
 
 // 健康检查（公开）
 app.get('/api/health', (req, res) => {

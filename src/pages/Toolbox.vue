@@ -25,7 +25,7 @@ const tools = [
     id: 'groups',
     title: '一组一宠',
     desc: '小组共同养宠与集体能量',
-    to: '/groups',
+    to: '/manage/groups',
     tint: 'from-sky-400 to-blue-500',
     paths: ['M16 11a3 3 0 1 0-2.8-4', 'M8 11a3 3 0 1 0 2.8-4', 'M12 14a4 4 0 0 0-4 2.2V19h8v-2.8A4 4 0 0 0 12 14z', 'M5.5 19v-1.5A3.5 3.5 0 0 1 8 14.2', 'M18.5 19v-1.5A3.5 3.5 0 0 0 16 14.2'],
   },
@@ -60,6 +60,14 @@ const tools = [
     action: 'table',
     tint: 'from-cyan-400 to-sky-500',
     paths: ['M4 5h16v14H4z', 'M4 10h16', 'M4 15h16', 'M10 5v14', 'M15 5v14'],
+  },
+  {
+    id: 'seating',
+    title: '座位表',
+    desc: '快速排座、换座轮换，支持全屏与打印',
+    to: '/seating',
+    tint: 'from-violet-400 to-indigo-500',
+    paths: ['M3 4h7v7H3z', 'M14 4h7v7h-7z', 'M3 13h7v7H3z', 'M14 13h7v7h-7z'],
   },
   {
     id: 'random',
@@ -234,8 +242,8 @@ onUnmounted(() => {
     <div class="max-w-5xl mx-auto space-y-6">
       <div class="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">老师工具箱</h1>
-          <p class="text-sm text-gray-500 mt-1">参考班宠乐园工具箱：提升课堂互动效率的实用小工具</p>
+          <h1 class="text-2xl font-bold text-gray-800">教师工具箱</h1>
+          <p class="text-sm text-gray-500 mt-1">课堂互动实用小工具：点名、计时、批量记分等</p>
         </div>
           <button type="button" @click="goFullscreen()" class="px-3 py-1.5 rounded-xl border text-sm text-gray-600 hover:bg-orange-50 inline-flex items-center gap-1.5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

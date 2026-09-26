@@ -4,6 +4,12 @@ import { randomBytes } from 'crypto'
 import { db } from '../db.js'
 import { authMiddleware, requireRegistered } from '../middleware/auth.js'
 import { verifyClassOwnership, verifyClassOwnerOnly, isClassOwner } from '../middleware/ownership.js'
+import {
+  getLevelConfigForClass,
+  normalizeLevelConfig,
+  LEVEL_CONFIG,
+  recalcClassLevels,
+} from '../utils/level.js'
 
 const router = Router()
 
@@ -285,9 +291,10 @@ router.post('/', authMiddleware, (req, res) => {
   const invite_code = uniqueInviteCode()
 
   const create = db.transaction(() => {
+    ensureUiThemeColumn()
     db.prepare(
-      'INSERT INTO classes (id, user_id, name, created_at, updated_at, invite_code) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(id, req.userId, name, now, now, invite_code)
+      'INSERT INTO classes (id, user_id, name, created_at, updated_at, invite_code, ui_theme) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, req.userId, name, now, now, invite_code, 'forest')
 
     db.prepare(`
       INSERT INTO class_teachers (id, class_id, user_id, role, joined_at)
@@ -303,6 +310,7 @@ router.post('/', authMiddleware, (req, res) => {
     created_at: now,
     updated_at: now,
     invite_code,
+    ui_theme: 'forest',
     role: 'owner',
     is_owner: true,
   })
@@ -312,7 +320,7 @@ const ALLOWED_THEMES = ['peach', 'ocean', 'forest', 'paper', 'violet']
 
 function ensureUiThemeColumn() {
   try {
-    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'peach'`)
+    db.exec(`ALTER TABLE classes ADD COLUMN ui_theme TEXT DEFAULT 'forest'`)
   } catch (e) {
     // already exists
   }
@@ -365,6 +373,51 @@ router.put('/:id', authMiddleware, (req, res) => {
   res.json({ success: true })
 })
 
+/** 班级等级经验配置 */
+router.get('/:id/level-config', authMiddleware, (req, res) => {
+  const cls = verifyClassOwnership(req.params.id, req.userId)
+  if (!cls) return res.status(403).json({ error: '无权访问此班级' })
+  const config = getLevelConfigForClass(req.params.id)
+  res.json({ config, isDefault: !cls.level_config, defaults: LEVEL_CONFIG })
+})
+
+router.put('/:id/level-config', authMiddleware, requireRegistered, (req, res) => {
+  const cls = verifyClassOwnership(req.params.id, req.userId)
+  if (!cls) return res.status(403).json({ error: '无权修改' })
+  const config = normalizeLevelConfig(req.body?.config)
+  db.prepare('UPDATE classes SET level_config = ?, updated_at = ? WHERE id = ?')
+    .run(JSON.stringify(config), Date.now(), req.params.id)
+  const updated = recalcClassLevels(req.params.id)
+  res.json({ success: true, config, studentsUpdated: updated })
+})
+
+/** 班级积分重置：清零积分/经验/等级，清空评价记录；保留学生与宠物类型 */
+router.post('/:id/reset-points', authMiddleware, requireRegistered, (req, res) => {
+  const cls = verifyClassOwnerOnly(req.params.id, req.userId)
+  if (!cls) return res.status(403).json({ error: '仅班主任可重置班级积分' })
+
+  const tx = db.transaction(() => {
+    const n = db.prepare(`
+      UPDATE students
+      SET total_points = 0, pet_exp = 0, pet_level = 0, pet_status = 'alive'
+      WHERE class_id = ?
+    `).run(req.params.id).changes
+    db.prepare('DELETE FROM evaluation_records WHERE class_id = ?').run(req.params.id)
+    try {
+      db.prepare('DELETE FROM shop_redemptions WHERE class_id = ?').run(req.params.id)
+    } catch { /* table may miss */ }
+    try {
+      db.prepare('DELETE FROM group_energy_records WHERE class_id = ?').run(req.params.id)
+    } catch { /* ignore */ }
+    try {
+      db.prepare('UPDATE student_groups SET group_energy = 0, pet_level = 1 WHERE class_id = ?').run(req.params.id)
+    } catch { /* ignore */ }
+    return n
+  })
+  const students = tx()
+  res.json({ success: true, students })
+})
+
 // 删除班级（仅班主任；游客禁止）
 router.delete('/:id', authMiddleware, requireRegistered, (req, res) => {
   const cls = verifyClassOwnerOnly(req.params.id, req.userId)
@@ -375,6 +428,9 @@ router.delete('/:id', authMiddleware, requireRegistered, (req, res) => {
   const deleteClass = db.transaction(() => {
     db.prepare('DELETE FROM evaluation_records WHERE class_id = ?').run(req.params.id)
     db.prepare('DELETE FROM class_teachers WHERE class_id = ?').run(req.params.id)
+    try { db.prepare('DELETE FROM micro_badge_awards WHERE class_id = ?').run(req.params.id) } catch {}
+    try { db.prepare('DELETE FROM micro_badge_types WHERE class_id = ?').run(req.params.id) } catch {}
+    try { db.prepare('DELETE FROM class_seat_charts WHERE class_id = ?').run(req.params.id) } catch {}
 
     const studentRefs = db.prepare(`
       SELECT m.name AS table_name, fk."from" AS column_name

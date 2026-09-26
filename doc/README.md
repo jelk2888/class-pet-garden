@@ -14,5 +14,5 @@ npm start
 # 默认管理员：admin / Claw2026!
 
 sudo docker build -t class-pet-garden -f docker/Dockerfile ./server
-sudo docker run -d -p 3000:3000 -v $(pwd)/db:/db --name class-pet-garden class-pet-garden
+sudo docker run -d -p 3000:4158 -v $(pwd)/db:/db --name class-pet-garden class-pet-garden
 ```

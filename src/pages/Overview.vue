@@ -32,7 +32,7 @@ const showClassModal = ref(false)
 
 const tips = [
   { icon: '①', title: '创建班级', desc: '先建一个班级作为成长空间', action: 'createClass', label: '去创建' },
-  { icon: '②', title: '导入学生', desc: '添加名单，让每位同学领养宠物', action: '/students', label: '学生管理' },
+  { icon: '②', title: '导入学生', desc: '添加名单，让每位同学领养宠物', action: '/manage/students', label: '学生管理' },
   { icon: '③', title: '课堂评价', desc: '在宠物教室随手加分，看见进步', action: '/', label: '进入教室' },
 ]
 
@@ -97,7 +97,7 @@ async function handleCreateClass(name: string) {
     showClassModal.value = false
     toast.success('班级创建成功！')
     await loadClasses()
-    router.push('/students')
+    router.push('/manage/students')
   } catch {
     toast.error('创建失败')
   }
@@ -234,10 +234,10 @@ onMounted(async () => {
           <h2 class="font-bold text-gray-800 mb-4">快捷入口</h2>
           <div class="grid grid-cols-2 gap-3">
             <router-link to="/" class="quick-tile">🐾<span>宠物教室</span></router-link>
-            <router-link to="/students" class="quick-tile">👥<span>学生管理</span></router-link>
+            <router-link to="/manage/students" class="quick-tile">👥<span>学生管理</span></router-link>
             <router-link to="/tasks" class="quick-tile">✅<span>任务中心</span></router-link>
-            <router-link to="/toolbox" class="quick-tile">🧰<span>老师工具箱</span></router-link>
-            <router-link to="/groups" class="quick-tile">🐣<span>一组一宠</span></router-link>
+            <router-link to="/toolbox" class="quick-tile">🧰<span>教师工具箱</span></router-link>
+            <router-link to="/manage" class="quick-tile">🏫<span>班级管理</span></router-link>
             <router-link to="/shop" class="quick-tile">🛒<span>积分商城</span></router-link>
             <router-link to="/honors" class="quick-tile">🎖️<span>荣誉墙</span></router-link>
           </div>

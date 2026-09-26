@@ -37,7 +37,7 @@ REM 本地数据目录（SQLite），与代码分离，便于备份
 if not exist "data" mkdir "data"
 set "DATA_DIR=%~dp0data"
 set "HOST=0.0.0.0"
-set "PORT=3000"
+set "PORT=4158"
 
 if not exist "server\node_modules\better-sqlite3" (
   echo 首次运行：正在安装服务端依赖（需联网，约 1～3 分钟）...
@@ -70,7 +70,7 @@ set EXITCODE=%ERRORLEVEL%
 
 echo.
 if not "%EXITCODE%"=="0" (
-  echo [提示] 进程已退出，代码 %EXITCODE%。若端口被占用，可先关闭占用 3000 的程序，
+  echo [提示] 进程已退出，代码 %EXITCODE%。若端口被占用，可先关闭占用 4158 的程序，
   echo 或设置环境变量 PORT 后重试，例如：set PORT=3001
 )
 echo.

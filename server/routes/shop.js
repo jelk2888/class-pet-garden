@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { verifyClassOwnership, verifyStudentOwnership } from '../middleware/ownership.js'
-import { calculateLevel } from '../utils/level.js'
+import { calculateLevel, getLevelConfigForClass } from '../utils/level.js'
 import { listCatalog, getCatalogItem } from '../services/shopCatalogStore.js'
 
 const router = Router()
@@ -125,7 +125,7 @@ router.post('/:classId/redeem', authMiddleware, (req, res) => {
   const tx = db.transaction(() => {
     const newPoints = student.total_points - item.cost
     const newExp = Math.max(0, (student.pet_exp || 0) - item.cost)
-    const newLevel = calculateLevel(newExp)
+    const newLevel = calculateLevel(newExp, getLevelConfigForClass(req.params.classId))
     db.prepare('UPDATE students SET total_points = ?, pet_exp = ?, pet_level = ? WHERE id = ?')
       .run(newPoints, newExp, newLevel, studentId)
     if (item.stock > 0) {

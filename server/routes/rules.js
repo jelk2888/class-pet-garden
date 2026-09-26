@@ -2,12 +2,12 @@ import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
-import { listPackMeta, getPackRules } from '../data/rulePacks.js'
+import { listPackMeta, getPackRules, RULE_PACKS } from '../data/rulePacks.js'
 
 const router = Router()
 
-// 默认规则模板
-const DEFAULT_RULES = [
+// 默认规则模板（本系统基础集）
+const BASE_DEFAULT_RULES = [
   // ===== 学习 =====
   { name: '平时测验满分', points: 3, category: '学习' },
   { name: '作业完成优秀', points: 3, category: '学习' },
@@ -108,6 +108,23 @@ const DEFAULT_RULES = [
   { name: '故意玩弄损坏公共电器', points: -3, category: '其他' },
   { name: '扣分严重/打架/作弊/严重违纪', points: -8, category: '其他' },
 ]
+
+/** 合并参考站规则包 → 完整默认规则（按名称去重） */
+function buildFullDefaultRules() {
+  const map = new Map()
+  for (const r of BASE_DEFAULT_RULES) {
+    map.set(r.name, r)
+  }
+  for (const pack of Object.values(RULE_PACKS)) {
+    if (!pack.rules) continue
+    for (const r of pack.rules) {
+      if (!map.has(r.name)) map.set(r.name, r)
+    }
+  }
+  return [...map.values()]
+}
+
+const DEFAULT_RULES = buildFullDefaultRules()
 
 function copyDefaultRules(userId) {
   const now = Date.now()

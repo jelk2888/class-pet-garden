@@ -109,6 +109,29 @@ function scanLevels(petId) {
   return levels
 }
 
+/** 至少有一张等级图才算可领养 */
+export function hasPetAssets(petId) {
+  const dir = path.join(PETS_ROOT, petId)
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return false
+  for (let i = 0; i <= 8; i++) {
+    if (fs.existsSync(path.join(dir, `lv${i}.png`))) return true
+  }
+  return false
+}
+
+/** 某等级图不存在时，回退到最近有图的等级路径 */
+export function resolvePetImagePath(petId, level) {
+  const lv = Math.max(0, Math.min(8, Number(level) || 0))
+  const preferred = path.join(PETS_ROOT, petId, `lv${lv}.png`)
+  if (fs.existsSync(preferred)) return `/pets/${petId}/lv${lv}.png`
+  for (const i of [1, lv, 2, 3, 4, 5, 6, 7, 8, 0]) {
+    if (fs.existsSync(path.join(PETS_ROOT, petId, `lv${i}.png`))) {
+      return `/pets/${petId}/lv${i}.png`
+    }
+  }
+  return `/pets/${petId}/lv${lv}.png`
+}
+
 function petPayload(meta, builtin) {
   const id = meta.id
   return {
@@ -116,13 +139,13 @@ function petPayload(meta, builtin) {
     name: meta.name,
     category: meta.category === 'mythical' ? 'mythical' : 'normal',
     builtin: !!builtin,
-    image: `/pets/${id}/lv1.png`,
+    image: resolvePetImagePath(id, 1),
     levelImages: levelImages(id),
     levels: scanLevels(id),
   }
 }
 
-/** 对外图鉴列表（隐藏的不返回） */
+/** 对外图鉴列表（隐藏的不返回；无图片资源的不返回，避免前端全变 🐕） */
 export function listPetsCatalog() {
   const manifest = readManifest()
   const hidden = new Set(manifest.hidden)
@@ -130,15 +153,18 @@ export function listPetsCatalog() {
 
   for (const p of BUILTIN_PETS) {
     if (hidden.has(p.id)) continue
+    if (!hasPetAssets(p.id)) continue
     byId.set(p.id, petPayload(p, true))
   }
   // 「我的宠物」九级图鉴（优先展示，覆盖同 id）
   for (const p of loadMyPetsCatalog()) {
     if (!p?.id || hidden.has(p.id)) continue
+    if (!hasPetAssets(p.id)) continue
     byId.set(p.id, petPayload(p, false))
   }
   for (const p of manifest.custom) {
     if (!p?.id || hidden.has(p.id)) continue
+    if (!hasPetAssets(p.id)) continue
     byId.set(p.id, petPayload(p, false))
   }
 
@@ -149,6 +175,7 @@ export function listPetsCatalog() {
     const full = path.join(PETS_ROOT, name)
     if (!fs.statSync(full).isDirectory()) continue
     if (hidden.has(name) || byId.has(name)) continue
+    if (!hasPetAssets(name)) continue
     byId.set(name, petPayload({ id: name, name, category: 'normal' }, false))
   }
 
@@ -156,6 +183,53 @@ export function listPetsCatalog() {
     if (a.category !== b.category) return a.category === 'normal' ? -1 : 1
     return a.name.localeCompare(b.name, 'zh')
   })
+}
+
+/**
+ * 把学生/小组上「没有图片」的 pet_type 改成现有图鉴里的随机一只。
+ * 返回修复条数。
+ */
+export function repairOrphanPetAssignments(database) {
+  if (!database) return { students: 0, groups: 0 }
+  const valid = listPetsCatalog().map((p) => p.id)
+  if (!valid.length) return { students: 0, groups: 0 }
+
+  let studentsFixed = 0
+  let groupsFixed = 0
+  const pick = () => valid[Math.floor(Math.random() * valid.length)]
+
+  try {
+    const rows = database.prepare(
+      'SELECT id, pet_type, pet_level FROM students WHERE pet_type IS NOT NULL'
+    ).all()
+    const upd = database.prepare('UPDATE students SET pet_type = ? WHERE id = ?')
+    for (const r of rows) {
+      if (!r.pet_type || hasPetAssets(r.pet_type)) continue
+      upd.run(pick(), r.id)
+      studentsFixed++
+    }
+  } catch (e) {
+    console.warn('[pets] repair students failed:', e?.message || e)
+  }
+
+  try {
+    const rows = database.prepare(
+      'SELECT id, pet_type FROM student_groups WHERE pet_type IS NOT NULL'
+    ).all()
+    const upd = database.prepare('UPDATE student_groups SET pet_type = ? WHERE id = ?')
+    for (const r of rows) {
+      if (!r.pet_type || hasPetAssets(r.pet_type)) continue
+      upd.run(pick(), r.id)
+      groupsFixed++
+    }
+  } catch (e) {
+    console.warn('[pets] repair groups failed:', e?.message || e)
+  }
+
+  if (studentsFixed || groupsFixed) {
+    console.log(`[pets] 已修复无图宠物：学生 ${studentsFixed}，小组 ${groupsFixed}`)
+  }
+  return { students: studentsFixed, groups: groupsFixed }
 }
 
 /** 管理端列表：含已隐藏项（marked hidden） */

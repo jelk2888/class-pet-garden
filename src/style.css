@@ -127,3 +127,13 @@ body {
 .loading-pet {
   animation: bounce 1s ease-in-out infinite;
 }
+
+/* 宠物教室全屏：隐藏顶栏/底栏，最大化投影面积 */
+html.classroom-fullscreen header,
+html.classroom-fullscreen footer {
+  display: none !important;
+}
+
+html.classroom-fullscreen main {
+  padding-top: 0.75rem !important;
+}

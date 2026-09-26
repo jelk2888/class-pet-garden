@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import type { Rule } from "@/types";
 import { useAuth } from "@/composables/useAuth";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
-import PageLayout from "@/components/layout/PageLayout.vue";
+import EmbedAwareLayout from "@/components/layout/EmbedAwareLayout.vue";
+import { useRoute } from "vue-router";
 
 interface Tag {
   id: string;
@@ -16,13 +17,23 @@ interface Tag {
 const { api } = useAuth();
 const toast = useToast();
 const { confirmDialog, showConfirm, closeConfirm } = useConfirm();
+const route = useRoute();
+const isEmbed = computed(() => !!route.meta.embed);
 
 const activeTab = ref<"rules" | "tags" | "revival">("rules");
+
+watch(
+  () => route.meta.tab,
+  (tab) => {
+    if (tab === "rules" || tab === "tags" || tab === "revival") {
+      activeTab.value = tab;
+    }
+  },
+  { immediate: true }
+);
 const isLoading = ref(true);
 const rules = ref<Rule[]>([]);
 const tags = ref<Tag[]>([]);
-const rulePacks = ref<Array<{ id: string; name: string; desc: string; source: string; count: number | null }>>([]);
-const importingPack = ref("");
 
 const categories = ["学习", "行为", "健康", "其他"];
 const newRuleName = ref("");
@@ -79,41 +90,6 @@ async function loadRules() {
   }
 }
 
-async function loadRulePacks() {
-  try {
-    const res = await api.get("/rules/packs");
-    rulePacks.value = res.data.packs || [];
-  } catch (e) {
-    console.error("加载规则包失败:", e);
-  }
-}
-
-async function importPack(packId: string, mode: "merge" | "replace") {
-  const pack = rulePacks.value.find((p) => p.id === packId);
-  const title = mode === "replace" ? "替换导入规则包" : "合并导入规则包";
-  const message =
-    mode === "replace"
-      ? `将清空当前规则，并导入「${pack?.name || packId}」。确定吗？`
-      : `将把「${pack?.name || packId}」中尚未存在的规则合并进来。确定吗？`;
-  showConfirm({
-    title,
-    message,
-    confirmText: mode === "replace" ? "替换导入" : "合并导入",
-    type: mode === "replace" ? "danger" : "info",
-    onConfirm: async () => {
-      importingPack.value = packId;
-      try {
-        const res = await api.post("/rules/import-pack", { packId, mode });
-        toast.success(`已导入 ${res.data.added} 条（共 ${res.data.total} 条）`);
-        rules.value = res.data.rules || [];
-      } catch {
-        toast.error("导入失败");
-      } finally {
-        importingPack.value = "";
-      }
-    },
-  });
-}
 async function loadTags() {
   try {
     const res = await api.get("/tags");
@@ -183,7 +159,7 @@ async function deleteRule(id: string) {
 async function resetRules() {
   showConfirm({
     title: "重置规则",
-    message: "确定重置为默认规则？",
+    message: "将清空当前规则，并恢复为完整默认规则（含班宠/班级优/吾师等参考站常用项）。确定吗？",
     confirmText: "重置",
     type: "danger",
     onConfirm: async () => {
@@ -361,7 +337,7 @@ async function deleteCustomTask(id: string) {
 onMounted(async () => {
   isLoading.value = true;
   try {
-    await Promise.all([loadRules(), loadTags(), loadRevivalSettings(), loadRulePacks()]);
+    await Promise.all([loadRules(), loadTags(), loadRevivalSettings()]);
     newTagColor.value =
       presetColors[Math.floor(Math.random() * presetColors.length)];
   } finally {
@@ -371,8 +347,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <PageLayout>
+  <EmbedAwareLayout>
     <div class="max-w-4xl mx-auto w-full">
+      <div v-if="isEmbed" class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">积分规则</h1>
+        <p class="text-sm text-gray-500 mt-1">自定义本班加分、扣分规则；「重置为默认」含全部参考站常用规则。</p>
+      </div>
       <div v-if="isLoading" class="flex items-center justify-center py-20">
         <div class="text-center">
           <div class="text-6xl animate-bounce mb-4">⚙️</div>
@@ -380,7 +360,7 @@ onMounted(async () => {
         </div>
       </div>
       <template v-else>
-        <div class="flex gap-2 mb-6">
+        <div v-if="!isEmbed" class="flex gap-2 mb-6">
           <button
             @click="activeTab = 'rules'"
             class="px-5 py-2.5 rounded-xl font-medium transition-all"
@@ -417,34 +397,6 @@ onMounted(async () => {
         </div>
 
         <template v-if="activeTab === 'rules'">
-          <div class="bg-white rounded-2xl p-6 shadow-lg mb-6">
-            <h3 class="font-bold text-lg mb-2">📦 参考站规则包</h3>
-            <p class="text-sm text-gray-500 mb-4">借鉴班宠乐园 / 班级优 / 吾师及一组一宠实践，可自行增删改</p>
-            <div class="grid sm:grid-cols-2 gap-3">
-              <div
-                v-for="pack in rulePacks"
-                :key="pack.id"
-                class="border border-orange-100 rounded-xl p-4 bg-orange-50/40"
-              >
-                <div class="font-bold text-gray-800">{{ pack.name }}</div>
-                <div class="text-xs text-gray-500 mt-1">{{ pack.desc }}</div>
-                <div class="text-xs text-orange-600 mt-1">来源：{{ pack.source }} · {{ pack.count ?? '?' }} 条</div>
-                <div class="flex gap-2 mt-3">
-                  <button
-                    class="flex-1 text-sm py-1.5 rounded-lg bg-orange-500 text-white font-medium disabled:opacity-50"
-                    :disabled="importingPack === pack.id"
-                    @click="importPack(pack.id, 'merge')"
-                  >合并导入</button>
-                  <button
-                    class="flex-1 text-sm py-1.5 rounded-lg border border-orange-300 text-orange-700 font-medium disabled:opacity-50"
-                    :disabled="importingPack === pack.id"
-                    @click="importPack(pack.id, 'replace')"
-                  >替换导入</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="bg-white rounded-2xl p-6 shadow-lg mb-6 border-2 border-orange-100">
             <h3 class="font-bold text-lg mb-2">➕ 增加新规则</h3>
             <p class="text-sm text-gray-500 mb-4">填写名称与分值后点「增加规则」；列表每条右侧可编辑或删除</p>
@@ -871,5 +823,5 @@ onMounted(async () => {
       @confirm="confirmDialog.onConfirm"
       @cancel="closeConfirm"
     />
-  </PageLayout>
+  </EmbedAwareLayout>
 </template>

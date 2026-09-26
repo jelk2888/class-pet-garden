@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 interface Props {
   src: string
@@ -24,6 +24,18 @@ const props = withDefaults(defineProps<Props>(), {
 
 const isLoaded = ref(false)
 const hasError = ref(false)
+const currentSrc = ref(props.src)
+const triedFallback = ref(false)
+
+watch(
+  () => props.src,
+  (v) => {
+    currentSrc.value = v
+    isLoaded.value = false
+    hasError.value = false
+    triedFallback.value = false
+  }
+)
 
 const sizeClasses = computed(() => {
   const sizes: Record<string, string> = {
@@ -41,9 +53,7 @@ const roundedClass = computed(() => {
   return props.rounded ? 'rounded-full' : ''
 })
 
-// 根据尺寸调整表情大小
 const emojiSizeClass = computed(() => {
-  // 如果固定表情大小，使用固定的小尺寸
   if (props.fixedEmojiSize) {
     return 'text-xl'
   }
@@ -62,11 +72,18 @@ function onLoad() {
 }
 
 function onError() {
+  // 缺某级图时先回退到 lv1，减少全员变成狗脸 emoji
+  if (!triedFallback.value && /\/lv\d+\.png(?:\?|$)/i.test(currentSrc.value)) {
+    triedFallback.value = true
+    currentSrc.value = currentSrc.value.replace(/\/lv\d+\.png/i, '/lv1.png')
+    isLoaded.value = false
+    hasError.value = false
+    return
+  }
   hasError.value = true
   isLoaded.value = true
 }
 
-// 随机选择加载动画表情
 const loadingEmojis = ['🐾', '🐕', '🐈', '🐇', '🐹', '🦆', '🦙', '🐼', '🐯', '🦄', '🐉', '🦅']
 const randomEmoji = computed(() => loadingEmojis[Math.floor(Math.random() * loadingEmojis.length)])
 </script>
@@ -79,16 +96,13 @@ const randomEmoji = computed(() => loadingEmojis[Math.floor(Math.random() * load
       roundedClass
     ]"
   >
-    <!-- 加载状态 - 可爱动物爪印动画 -->
     <Transition name="fade">
       <div 
         v-if="showLoading && !isLoaded" 
         class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100"
       >
-        <!-- 爪印动画 -->
         <div class="flex flex-col items-center gap-2">
           <span :class="[emojiSizeClass, 'animate-bounce']">{{ randomEmoji }}</span>
-          <!-- 爪印轨迹 -->
           <div class="flex gap-1 text-xs">
             <span class="animate-pulse" style="animation-delay: 0ms">🐾</span>
             <span class="animate-pulse" style="animation-delay: 150ms">🐾</span>
@@ -98,19 +112,17 @@ const randomEmoji = computed(() => loadingEmojis[Math.floor(Math.random() * load
       </div>
     </Transition>
 
-    <!-- 错误状态 -->
     <Transition name="fade">
       <div 
         v-if="hasError" 
         class="absolute inset-0 flex items-center justify-center bg-gray-100"
       >
-        <span :class="[emojiSizeClass, 'text-gray-400']">🐕</span>
+        <span :class="[emojiSizeClass, 'text-gray-400']">🐾</span>
       </div>
     </Transition>
 
-    <!-- 图片 -->
     <img
-      :src="src"
+      :src="currentSrc"
       :alt="alt"
       loading="lazy"
       class="w-full h-full object-contain transition-all duration-300"

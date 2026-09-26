@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated, nextTick } from 'vue'
+import { ref, computed, onMounted, onActivated, onUnmounted, nextTick } from 'vue'
 import type { Student, Rule, EvaluationRecord, Tag } from '@/types'
 import { useAuth, setGlobalErrorHandler } from '@/composables/useAuth'
 import { useClasses } from '@/composables/useClasses'
@@ -27,7 +27,6 @@ import EvaluationModal from '@/components/modals/EvaluationModal.vue'
 import PetModal from '@/components/modals/PetModal.vue'
 import PetStatusModal from '@/components/PetStatusModal.vue'
 import ClassModal from '@/components/modals/ClassModal.vue'
-import RulesModal from '@/components/modals/RulesModal.vue'
 
 // Auth & Toast
 const { api } = useAuth()
@@ -62,7 +61,6 @@ const isLoaded = ref(false)
 const showEvalModal = ref(false)
 const showPetModal = ref(false)
 const showClassModal = ref(false)
-const showRulesModal = ref(false)
 const showDetailPanel = ref(false)
 const selectedStudent = ref<Student | null>(null)
 const detailStudent = ref<Student | null>(null)
@@ -78,6 +76,26 @@ const scoreAnimations = ref<Map<string, { points: number; show: boolean }>>(new 
 // 标签过滤
 const selectedTagFilter = ref<Tag | null>(null)
 const showTagFilter = ref(false)
+const isFullscreen = ref(false)
+
+function syncFullscreenState() {
+  isFullscreen.value = !!document.fullscreenElement
+  document.documentElement.classList.toggle('classroom-fullscreen', isFullscreen.value)
+}
+
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+    } else {
+      await document.exitFullscreen()
+    }
+  } catch (e: any) {
+    toast.error(e?.message || '全屏切换失败（部分浏览器需用户手势）')
+  } finally {
+    syncFullscreenState()
+  }
+}
 
 // Computed
 const filteredStudents = computed(() => {
@@ -126,48 +144,6 @@ async function loadRules() {
     rules.value = res.data.rules
   } catch (error) {
     console.error('加载规则失败:', error)
-  }
-}
-
-async function handleAddRule(name: string, points: number, category: string) {
-  try {
-    const res = await api.post('/rules', { name, points, category })
-    rules.value = [res.data, ...rules.value.filter((r) => r.id !== res.data.id)]
-    // 保持分类排序观感：重新拉取
-    await loadRules()
-    toast.success('规则已添加')
-  } catch (e: any) {
-    toast.error(e.response?.data?.error || '添加失败')
-  }
-}
-
-async function handleUpdateRule(id: string, name: string, points: number, category: string) {
-  try {
-    await api.put(`/rules/${id}`, { name, points, category })
-    await loadRules()
-    toast.success('规则已更新')
-  } catch (e: any) {
-    toast.error(e.response?.data?.error || '更新失败')
-  }
-}
-
-async function handleDeleteRule(id: string) {
-  try {
-    await api.delete(`/rules/${id}`)
-    rules.value = rules.value.filter((r) => r.id !== id)
-    toast.success('规则已删除')
-  } catch (e: any) {
-    toast.error(e.response?.data?.error || '删除失败')
-  }
-}
-
-async function handleResetRules() {
-  try {
-    const res = await api.post('/rules/reset')
-    rules.value = res.data.rules || []
-    toast.success(`已重置为默认规则（${res.data.count || rules.value.length} 条）`)
-  } catch (e: any) {
-    toast.error(e.response?.data?.error || '重置失败')
   }
 }
 
@@ -367,6 +343,8 @@ function toggleStudentSelect(studentId: string) {
 }
 
 onMounted(async () => {
+  document.addEventListener('fullscreenchange', syncFullscreenState)
+  syncFullscreenState()
   try {
     await loadClasses()
     await loadRules()
@@ -381,6 +359,11 @@ onActivated(() => {
   loadStudents()
   loadRules()
   loadTags()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', syncFullscreenState)
+  document.documentElement.classList.remove('classroom-fullscreen')
 })
 </script>
 
@@ -464,12 +447,13 @@ onActivated(() => {
 
         <div class="flex-1"></div>
 
-        <!-- 右侧：批量操作按钮 -->
+        <!-- 右侧：全屏 + 批量操作 -->
         <button
-          v-if="!batchMode"
-          @click="showRulesModal = true"
-          class="px-4 py-2 bg-white border border-orange-200 text-orange-600 rounded-xl font-medium text-sm shadow-sm hover:bg-orange-50 transition-all"
-        >⚙️ 规则设置</button>
+          type="button"
+          @click="toggleFullscreen"
+          class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-xl font-medium text-sm shadow-sm hover:bg-emerald-50 transition-all"
+          :title="isFullscreen ? '退出全屏 (Esc)' : '全屏展示，适合投影上课'"
+        >{{ isFullscreen ? '🗗 退出全屏' : '⛶ 全屏' }}</button>
         <button v-if="students.length > 0 && !batchMode" @click="startBatchMode" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all">✅ 批量评价</button>
         <button
           v-if="students.length > 0 && !batchMode && currentClass"
@@ -488,13 +472,13 @@ onActivated(() => {
         <div v-if="classes.length === 0" key="no-class" class="flex flex-col items-center justify-center min-h-[60vh]">
           <div class="text-8xl mb-6 animate-float">🏫</div>
           <h3 class="text-2xl font-bold text-gray-700 mb-3">开启宠物教室</h3>
-          <p class="text-gray-500 mb-6 text-lg max-w-md text-center">三步开始：创建班级 → 导入学生 → 课堂评价。建议先从侧栏「班级总览」完成开班向导。</p>
+          <p class="text-gray-500 mb-6 text-lg max-w-md text-center">三步开始：创建班级 → 导入学生 → 课堂评价。建议先从侧栏「首页」完成开班向导。</p>
           <div class="flex flex-wrap gap-3 justify-center">
             <button @click="showClassModal = true" class="bg-gradient-to-r from-sky-500 to-cyan-500 text-white px-6 py-3 rounded-2xl hover:shadow-lg hover:scale-105 transition-all font-bold">
               ➕ 创建班级
             </button>
             <router-link to="/overview" class="bg-white border border-sky-200 text-sky-700 px-6 py-3 rounded-2xl hover:shadow font-bold">
-              📊 班级总览
+              🏠 首页
             </router-link>
           </div>
         </div>
@@ -533,15 +517,6 @@ onActivated(() => {
 
     <!-- Modals -->
     <EvaluationModal :show="showEvalModal" :selected-count="selectedStudents.size" :rules="rules" @close="showEvalModal = false" @evaluate="handleEvaluate" />
-    <RulesModal
-      :show="showRulesModal"
-      :rules="rules"
-      @close="showRulesModal = false"
-      @add-rule="handleAddRule"
-      @update-rule="handleUpdateRule"
-      @delete-rule="handleDeleteRule"
-      @reset-rules="handleResetRules"
-    />
     <PetModal :show="showPetModal" :student="selectedStudent" @close="showPetModal = false; selectedStudent = null" @select="selectPet" />
     <DetailPanel :show="showDetailPanel" :student="detailStudent" :rules="rules" :student-records="studentRecords" @close="closeDetailPanel" @change-pet="showDetailPanel = false; selectedStudent = detailStudent; showPetModal = true" @evaluate="handleDetailEvaluate" @revived="handleRevived" />
     <ConfirmDialog :show="confirmDialog.show" :title="confirmDialog.title" :message="confirmDialog.message" :confirm-text="confirmDialog.confirmText" :cancel-text="confirmDialog.cancelText" :type="confirmDialog.type" @confirm="confirmDialog.onConfirm" @cancel="closeConfirm" />

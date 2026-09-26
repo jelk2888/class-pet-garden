@@ -8,7 +8,7 @@ import { useToast } from '@/composables/useToast'
 import { useConfirm } from '@/composables/useConfirm'
 import { matchByPinyin } from '@/utils/pinyin'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import PageLayout from '@/components/layout/PageLayout.vue'
+import EmbedAwareLayout from '@/components/layout/EmbedAwareLayout.vue'
 import { getPetLevelImage } from '@/data/pets'
 
 import ClassModal from '@/components/modals/ClassModal.vue'
@@ -241,7 +241,7 @@ onActivated(() => {
 </script>
 
 <template>
-  <PageLayout>
+  <EmbedAwareLayout>
     <div class="max-w-5xl mx-auto">
         <!-- 无班级状态 -->
         <div v-if="classes.length === 0" class="flex flex-col items-center justify-center min-h-[60vh]">
@@ -325,7 +325,7 @@ onActivated(() => {
         </div>
       </div>
     </Transition>
-  </PageLayout>
+  </EmbedAwareLayout>
 </template>
 
 <style scoped>

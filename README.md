@@ -52,7 +52,7 @@ npm install
 cd ..
 
 # 4. 启动（推荐双击「启动.bat」，或分别开两个终端）
-npm run server   # 后端 API :3000
+npm run server   # 后端 API :4158
 npm run dev      # 前端     :3001
 ```
 
@@ -132,14 +132,14 @@ npm run server
 Nginx 建议：
 
 - 静态文件指向前端 `dist/`
-- `/api/` 反向代理到 `http://127.0.0.1:3000`
+- `/api/` 反向代理到 `http://127.0.0.1:4158`
 - 开启 gzip；静态资源可长期缓存
 
 Docker（仅后端示例）：
 
 ```bash
 sudo docker build -t class-pet-garden -f docker/Dockerfile ./server
-sudo docker run -d -p 3000:3000 -v $(pwd)/db:/db --name class-pet-garden class-pet-garden
+sudo docker run -d -p 3000:4158 -v $(pwd)/db:/db --name class-pet-garden class-pet-garden
 ```
 
 数据库文件：`server/dongguo-pet.db`（Docker 内为 `/db/dongguo-pet.db`）。

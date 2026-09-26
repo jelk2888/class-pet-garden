@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-echo [1/2] 启动后端 API :3000 ...
+echo [1/2] 启动后端 API :4158 ...
 start "班级宠物园-后端" cmd /k "node server\index.js"
 
 timeout /t 2 /nobreak >nul

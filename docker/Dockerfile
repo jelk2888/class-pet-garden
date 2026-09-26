@@ -13,7 +13,7 @@ COPY . .
 RUN npm install --registry=https://registry.npmmirror.com/
 
 # 暴露容器端口
-EXPOSE 3000
+EXPOSE 4158
 
 # 启动应用程序
 CMD ["npm", "start"]

@@ -12,7 +12,7 @@
 # 安装依赖
 npm install
 
-# 开发模式（同时启动前端 :3001 和后端 :3000）
+# 开发模式（同时启动前端 :3001 和后端 :4158）
 npm start
 
 # 仅前端（Vite 开发服务器）
@@ -84,7 +84,7 @@ class-pet-garden/
 
 **路径别名**: `@/` 在 Vite 和 Vitest 配置中均解析为 `src/`。
 
-**API 代理**: Vite 代理 `/api` → `http://localhost:3000/api`
+**API 代理**: Vite 代理 `/api` → `http://localhost:4158/api`
 
 **后端结构**: Express 模块路由，每个路由文件处理一个领域（班级、学生、评价）。使用 `better-sqlite3` 进行同步数据库操作。
 

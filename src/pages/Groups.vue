@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import PageLayout from '@/components/layout/PageLayout.vue'
+import EmbedAwareLayout from '@/components/layout/EmbedAwareLayout.vue'
 import PetImage from '@/components/PetImage.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useClasses } from '@/composables/useClasses'
@@ -124,10 +124,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <PageLayout>
+  <EmbedAwareLayout>
     <div class="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">一组一宠 · 小组能量</h1>
+        <h1 class="text-2xl font-bold text-gray-800">小组管理</h1>
         <p class="text-sm text-gray-500 mt-1">
           个人积分归个人；集体表现从本组入口加能量。小组榜按<strong>小组净能量</strong>排序，尖子生个人分不会抬高整组。
         </p>
@@ -290,5 +290,5 @@ onMounted(async () => {
         </section>
       </template>
     </div>
-  </PageLayout>
+  </EmbedAwareLayout>
 </template>

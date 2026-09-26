@@ -62,3 +62,5 @@ desktop/dist-exe/
 public/downloads/*.exe
 dist/downloads/
 
+
+_boot_*.txt

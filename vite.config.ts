@@ -17,16 +17,16 @@ export default defineConfig({
       '/api': {
         // 保留 /api 前缀，与 server 的 app.use('/api/...') 一致
         // 旧 rewrite 去掉首个 / 会导致代理异常（表现为 500）
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4158',
         changeOrigin: true,
       },
       // 管理员新上传的宠物图走后端静态目录，避免仅依赖 Vite public 缓存
       '/pets': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4158',
         changeOrigin: true,
       },
       '/downloads': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4158',
         changeOrigin: true,
       },
     },
@@ -35,8 +35,9 @@ export default defineConfig({
       'Cache-Control': 'public, max-age=31536000, immutable'
     }
   },
-  // 构建配置 - 静态资源添加 hash
+  // 构建配置 - 静态资源添加 hash（保留 dist/pets，避免清空百兆图鉴）
   build: {
+    emptyOutDir: false,
     assetsDir: 'assets',
     rollupOptions: {
       output: {

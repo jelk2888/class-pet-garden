@@ -100,7 +100,7 @@ def main():
     else:
         downloads_dst.mkdir(parents=True, exist_ok=True)
 
-    # 3) 根 package.json：群晖上 npm install && npm start
+    # 3) 根 package.json：依赖写在根目录，供 Web Station 自动 npm install
     (OUT / "package.json").write_text(
         """{
   "name": "class-pet-garden-synology",
@@ -108,8 +108,14 @@ def main():
   "private": true,
   "description": "东郭工作室·班级宠物园 — 群晖 Web Station / Node.js 部署包",
   "scripts": {
-    "start": "node server/index.js",
-    "install:server": "npm install --omit=dev --prefix server"
+    "prestart": "node -e \"try{require('fs').accessSync('node_modules/sql.js')}catch(e){require('child_process').execSync('npm install --omit=dev',{stdio:'inherit'})}\"",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "sql.js": "^1.13.0",
+    "uuid": "^9.0.0"
   },
   "engines": {
     "node": ">=18"
@@ -121,6 +127,14 @@ def main():
 
     (OUT / "start-synology.sh").write_text(
         Path(r"D:\天门中学\班级宠物系统\deploy\start-synology.sh").read_text(encoding="utf-8").replace("\r\n", "\n"),
+        encoding="utf-8",
+    )
+    (OUT / "install-deps.sh").write_text(
+        Path(r"D:\天门中学\班级宠物系统\deploy\install-deps.sh").read_text(encoding="utf-8").replace("\r\n", "\n"),
+        encoding="utf-8",
+    )
+    (OUT / ".npmrc").write_text(
+        Path(r"D:\天门中学\班级宠物系统\deploy\synology-.npmrc").read_text(encoding="utf-8").replace("\r\n", "\n"),
         encoding="utf-8",
     )
 
@@ -136,34 +150,38 @@ def main():
 - dist/pets：前端构建时从 public 复制的副本，内容应与 public/pets 一致。
   单进程部署时以后端 public/pets 为准；两边都保留可避免漏图。不要只留 dist/pets。
 
-【推荐方式：Node.js 套件常驻】
-1. 套件中心安装：Node.js v18 / v20（或更新 LTS）、可选 pm2
+【Web Station Node.js 项目】
+A) Cannot find package express → 未 npm install / 旧 package.json 无依赖
+B) NODE_MODULE_VERSION 127 vs 115 → better-sqlite3 用 Node22 编的，Web Station 却是 Node20
+   必须在群晖上用 Node20 删掉 node_modules 后重装（勿从 Windows 拷贝）
+SSH：
+     cd /你的项目根
+     node -v && node -p "process.versions.modules"   # 应对 v20.x / 115
+     chmod +x install-deps.sh && ./install-deps.sh
+然后 Web Station 重启；PORT=4158 HOST=0.0.0.0
+
+【推荐方式：Node.js 套件常驻 / SSH】
+1. 套件中心安装：Node.js v20（与 Web Station 一致）、可选 pm2
 2. 将本文件夹上传到例如：/volume1/web/class-pet-garden
 3. 创建数据目录（SQLite 专用，强烈建议）：
      mkdir -p /volume1/class-pet-data
 4. SSH 执行：
      cd /volume1/web/class-pet-garden
+     chmod +x install-deps.sh && ./install-deps.sh
      chmod +x start-synology.sh
      ./start-synology.sh
    或：
-     cd server && npm install --omit=dev && cd ..
-     DATA_DIR=/volume1/class-pet-data PORT=3000 npm start
-5. Web Station 反向代理到 http://127.0.0.1:3000
-   或直接访问 http://群晖IP:3000
+     npm install --omit=dev
+     DATA_DIR=/volume1/class-pet-data PORT=4158 npm start
+5. Web Station 反向代理到 http://127.0.0.1:4158
+   或直接访问 http://群晖IP:4158
 
 【SQLite 数据库（群晖必读）】
-- 引擎：better-sqlite3（必须在群晖 Linux 上 npm install 编译）
-- 默认：server/data/dongguo-pet.db（首次自动建库）
-- 推荐环境变量：
-    DATA_DIR=/volume1/class-pet-data
-    或 DB_PATH=/volume1/class-pet-data/dongguo-pet.db
-- 已开启 WAL；备份请同时拷贝：
-    dongguo-pet.db / dongguo-pet.db-wal / dongguo-pet.db-shm
-- readonly / database is locked：检查 DATA_DIR 写权限
-- 编译失败：安装 Python3、make、gcc 后再 npm install
+- 引擎：better-sqlite3（已弃用）/ 现用 sql.js（纯 WASM，群晖友好）
+- sqlite 编译失败相关说明可忽略；请用最新包的 sql.js 依赖
 
 【环境变量】
-  PORT=3000
+  PORT=4158
   HOST=0.0.0.0
   DATA_DIR=/volume1/class-pet-data
   DB_PATH=...（可选，优先于 DATA_DIR）
